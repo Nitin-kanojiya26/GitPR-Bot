@@ -1,0 +1,58 @@
+{
+  "action": "opened",
+  "number": 1,
+  "pull_request": {
+    "id": 1000000001,
+    "number": 1,
+    "state": "open",
+    "title": "Add add function to calc.js",
+    "user": {
+      "login": "Nitin-kanojiya26",
+      "id": 123456,
+      "type": "User"
+    },
+    "body": "This PR adds a calculator helper function.",
+    "draft": false,
+    "head": {
+      "sha": "ecb6910e53a1a14b60bc2af260e617fb5ac978ff",
+      "ref": "test-pr",
+      "repo": {
+        "id": 987654321,
+        "name": "pr-bot-test",
+        "full_name": "Nitin-kanojiya26/pr-bot-test",
+        "owner": {
+          "login": "Nitin-kanojiya26"
+        }
+      }
+    },
+    "base": {
+      "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
+      "ref": "main",
+      "repo": {
+        "id": 987654321,
+        "name": "pr-bot-test",
+        "full_name": "Nitin-kanojiya26/pr-bot-test",
+        "owner": {
+          "login": "Nitin-kanojiya26"
+        }
+      }
+    }
+  },
+  "repository": {
+    "id": 987654321,
+    "name": "pr-bot-test",
+    "full_name": "Nitin-kanojiya26/pr-bot-test",
+    "owner": {
+      "login": "Nitin-kanojiya26"
+    }
+  },
+  "sender": {
+    "login": "Nitin-kanojiya26",
+    "id": 123456,
+    "type": "User"
+  },
+  "installation": {
+    "id": 5567905
+  }
+}
+

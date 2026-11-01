@@ -11,12 +11,14 @@
     "dev": "probot run ./lib/index.js"
   },
   "dependencies": {
-    "probot": "^13.4.0"
+    "parse-diff": "^0.12.0",
+    "probot": "^14.3.5"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",
+    "smee-client": "^5.0.0",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.5"
+    "vitest": "^5.0.5"
   },
   "engines": {
     "node": ">=20"

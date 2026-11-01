@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "probot run ./lib/index.js",
     "test": "vitest run",
+    "simulate": "node scripts/simulate.js",
     "dev": "probot run ./lib/index.js"
   },
   "dependencies": {

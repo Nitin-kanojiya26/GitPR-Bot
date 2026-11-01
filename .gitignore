@@ -1,0 +1,7 @@
+node_modules/
+lib/
+*.pem
+.env
+.DS_Store
+coverage/
+PR_REVIEW_BOT_GUIDE.md

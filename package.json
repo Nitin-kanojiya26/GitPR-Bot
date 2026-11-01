@@ -1,0 +1,24 @@
+{
+  "name": "pr-review-bot",
+  "version": "1.0.0",
+  "description": "AI-powered GitHub Pull Request Review Bot",
+  "private": true,
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "probot run ./lib/index.js",
+    "test": "vitest run",
+    "dev": "probot run ./lib/index.js"
+  },
+  "dependencies": {
+    "probot": "^13.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

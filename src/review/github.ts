@@ -6,9 +6,7 @@ export interface InlineComment {
   body: string;
 }
 
-/**
- * Posts a unified code review with inline comments on the Pull Request.
- */
+
 export async function postReview(
   context: Context<"pull_request.opened" | "pull_request.synchronize" | "pull_request.reopened">,
   comments: InlineComment[],

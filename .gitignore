@@ -4,5 +4,4 @@ lib/
 .env
 .DS_Store
 coverage/
-PR_REVIEW_BOT_GUIDE.md
-.env
+PR_REVIEW_BOT_BUILD_GUIDE.md

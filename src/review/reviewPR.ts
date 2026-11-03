@@ -141,8 +141,8 @@ export async function reviewPullRequest(
       comments: githubComments,
     });
 
-    log.info(`🎉 Successfully posted AI review with ${finalComments.length} comment(s)!`);
+    log.info(`[SUCCESS] Successfully posted AI review with ${finalComments.length} comment(s)!`);
   } catch (error) {
-    log.error(`❌ Review failed for PR #${pullNumber}:`, error);
+    log.error(`[ERROR] Review failed for PR #${pullNumber}:`, error);
   }
 }

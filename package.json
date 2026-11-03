@@ -10,16 +10,21 @@
     "test": "vitest run",
     "test:llm": "node scripts/test-llm.js",
     "simulate": "node scripts/simulate.js",
+    "seed": "node db/seed.ts",
+    "test:rag": "node scripts/test-rag.js",
     "dev": "probot run ./lib/index.js"
   },
   "dependencies": {
     "@google/genai": "^2.32.0",
     "parse-diff": "^0.12.0",
+    "pg": "^8.23.1",
+    "pgvector": "^0.3.0",
     "probot": "^14.3.5",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",
+    "@types/pg": "^8.23.1",
     "smee-client": "^5.0.0",
     "typescript": "^5.7.3",
     "vitest": "^5.0.5"

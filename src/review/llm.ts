@@ -40,7 +40,7 @@ export function parseAndValidateReview(rawText: string): ReviewComment[] {
     const validated = OutputSchema.parse(parsed);
     return validated.comments;
   } catch (err) {
-    console.error("⚠️ Failed to parse/validate LLM response:", err);
+    console.error("[ERROR] Failed to parse/validate LLM response:", err);
     return [];
   }
 }
@@ -54,7 +54,7 @@ export async function generateReview(
 ): Promise<ReviewComment[]> {
   const apiKey = process.env.LLM_API_KEY;
   if (!apiKey) {
-    console.warn("⚠️ No LLM_API_KEY found in environment. Skipping AI review.");
+    console.warn("[WARN] No LLM_API_KEY found in environment. Skipping AI review.");
     return [];
   }
 
@@ -90,15 +90,15 @@ ${diffsText}`;
       });
 
       const rawText = response.text || "{}";
-      console.log("🔍 [Gemini Raw Reply]:", rawText);
+      console.log("[INFO] [Gemini Raw Reply]:", rawText);
 
       const comments = parseAndValidateReview(rawText);
-      console.log(`🔍 [Parsed Comments]: ${comments.length}`);
+      console.log(`[INFO] [Parsed Comments]: ${comments.length}`);
       return comments;
     } catch (error: any) {
-      console.error(`❌ LLM review attempt ${attempt} failed:`, error?.message || error);
+      console.error(`[ERROR] LLM review attempt ${attempt} failed:`, error?.message || error);
       if (attempt === 1) {
-        console.log("⏳ Waiting 2 seconds before retrying...");
+        console.log("[INFO] Waiting 2 seconds before retrying...");
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
     }

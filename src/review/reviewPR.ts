@@ -2,6 +2,7 @@ import { Context } from "probot";
 import { getCommentableLines, numberedDiff } from "./diff.js";
 import { shouldReviewFile } from "./filters.js";
 import { generateReview, ReviewComment } from "./llm.js";
+import { retrieveRules, formatRulesForPrompt } from "./rag.js";
 
 export type OctokitInstance = Context["octokit"];
 
@@ -79,12 +80,25 @@ export async function reviewPullRequest(
       return;
     }
 
-    // 3. Ask Gemini to review the code
+    // 3. Retrieve relevant team style rules via pgvector RAG
+    const diffSummary = diffsToReview
+      .map((d) => `${d.filename}\n${d.diff}`)
+      .join("\n")
+      .slice(0, 2000);
+
+    log.info(`Retrieving relevant style rules from pgvector...`);
+    const retrievedRules = await retrieveRules(diffSummary, 3);
+    if (retrievedRules.length > 0) {
+      log.info(`Retrieved ${retrievedRules.length} style rule(s): ${retrievedRules.map((r) => r.title).join(", ")}`);
+    }
+    const rulesPrompt = formatRulesForPrompt(retrievedRules);
+
+    // 4. Ask Gemini to review the code with style guide awareness
     log.info(`Sending ${diffsToReview.length} file(s) to Gemini for review...`);
-    const rawAiComments = await generateReview(diffsToReview);
+    const rawAiComments = await generateReview(diffsToReview, rulesPrompt);
     log.info(`Gemini returned ${rawAiComments.length} suggestion(s).`);
 
-    // 4. Hallucination Defense: Drop comments on lines outside the diff
+    // 5. Hallucination Defense: Drop comments on lines outside the diff
     const validComments: ReviewComment[] = [];
 
     for (const comment of rawAiComments) {
@@ -93,7 +107,7 @@ export async function reviewPullRequest(
 
       if (!legalLines || !legalLines.has(comment.line)) {
         log.warn(
-          `⚠️ Dropping hallucinated comment on ${comment.file}:${comment.line} (Line not in diff or file mismatch)`
+          `[WARN] Dropping hallucinated comment on ${comment.file}:${comment.line} (Line not in diff or file mismatch)`
         );
         continue;
       }

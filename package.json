@@ -12,6 +12,7 @@
     "simulate": "node scripts/simulate.js",
     "seed": "node db/seed.ts",
     "test:rag": "node scripts/test-rag.js",
+    "test:rag-review": "node scripts/test-rag-review.js",
     "dev": "probot run ./lib/index.js"
   },
   "dependencies": {

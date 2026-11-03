@@ -1,0 +1,63 @@
+[
+  {
+    "id": 1,
+    "description": "Fetch API call without timeout signal",
+    "diff": "const response = await fetch('https://api.service.com/items');\nconst data = await response.json();",
+    "expectedRule": "1. Network Requests Must Have Timeouts and Error Handling"
+  },
+  {
+    "id": 2,
+    "description": "Dynamic execution using eval",
+    "diff": "const calculate = (expr) => {\n  return eval(expr);\n};",
+    "expectedRule": "2. Safe Code Execution (Never Use eval)"
+  },
+  {
+    "id": 3,
+    "description": "Hardcoded database password",
+    "diff": "const connectionString = 'postgres://admin:SuperSecretPass2026@db.internal:5432/main';",
+    "expectedRule": "3. No Hardcoded Secrets or Credentials"
+  },
+  {
+    "id": 4,
+    "description": "SQL query with raw string concatenation",
+    "diff": "const query = 'SELECT * FROM users WHERE email = \\'' + userEmail + '\\'';",
+    "expectedRule": "4. Parameterized SQL Queries (No String Concatenation)"
+  },
+  {
+    "id": 5,
+    "description": "Express endpoint handling body without schema validation",
+    "diff": "app.post('/api/users', async (req, res) => {\n  const { username, age } = req.body;\n  await db.insertUser(username, age);\n});",
+    "expectedRule": "5. Strict Input Validation on Public Functions and Endpoints"
+  },
+  {
+    "id": 6,
+    "description": "Production code using raw console.log",
+    "diff": "function processOrder(order) {\n  console.log('Order processed successfully: ' + order.id);\n}",
+    "expectedRule": "6. Use Structured Logging (No Raw console.log)"
+  },
+  {
+    "id": 7,
+    "description": "Unhandled floating promise without await or catch",
+    "diff": "function notifyUser(userId) {\n  emailService.sendNotification(userId);\n  return true;\n}",
+    "expectedRule": "7. Always Handle and Await Asynchronous Promises"
+  },
+  {
+    "id": 8,
+    "description": "Opening file stream or database pool without closing",
+    "diff": "const client = new Client({ connectionString });\nawait client.connect();\nconst res = await client.query('SELECT NOW()');",
+    "expectedRule": "8. Resource Cleanup and Closing Connections"
+  },
+  {
+    "id": 9,
+    "description": "Blocking synchronous CPU-heavy loop on event loop",
+    "diff": "const salt = 'salt123';\nconst hash = crypto.pbkdf2Sync('password', salt, 500000, 64, 'sha512');",
+    "expectedRule": "9. Avoid Blocking the Node.js Event Loop"
+  },
+  {
+    "id": 10,
+    "description": "Single letter variable and function names",
+    "diff": "function calc(a, b) {\n  const x = a * 0.18;\n  const y = b + x;\n  return y;\n}",
+    "expectedRule": "10. Descriptive Naming Conventions"
+  }
+]
+

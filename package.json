@@ -13,10 +13,14 @@
     "seed": "node db/seed.ts",
     "test:rag": "node scripts/test-rag.js",
     "test:rag-review": "node scripts/test-rag-review.js",
+    "test:queue": "node scripts/test-queue.js",
+    "eval:rag": "node evals/eval-rag.js",
     "dev": "probot run ./lib/index.js"
   },
   "dependencies": {
     "@google/genai": "^2.32.0",
+    "bullmq": "^6.5.4",
+    "ioredis": "^6.0.0",
     "parse-diff": "^0.12.0",
     "pg": "^8.23.1",
     "pgvector": "^0.3.0",

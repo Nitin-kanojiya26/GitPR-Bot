@@ -25,25 +25,25 @@ flowchart TD
     end
 
     subgraph Ingestion ["Ingestion Layer (src/index.ts)"]
-        WH -->|Signed Webhook| PROBOT["Probot Handler"]
-        PROBOT -->|1. Instant HTTP 200 OK (<15ms)| WH
-        PROBOT -->|2. Enqueue Review Job| QUEUE["BullMQ (pr-reviews)"]
+        WH -->|"Signed Webhook"| PROBOT["Probot Handler"]
+        PROBOT -->|"1. Instant HTTP 200 OK (under 15ms)"| WH
+        PROBOT -->|"2. Enqueue Review Job"| QUEUE["BullMQ (pr-reviews)"]
     end
 
     subgraph QueueLayer ["Async Queue & Idempotency (src/queue/)"]
         QUEUE --> REDIS[("Redis Cache & Queue (Port 6380)")]
-        REDIS -->|SET ... NX EX| LOCK["Idempotency Lock (Deduplication)"]
+        REDIS -->|"SET ... NX EX"| LOCK["Idempotency Lock (Deduplication)"]
         REDIS --> WORKER["BullMQ Worker (concurrency: 2)"]
     end
 
     subgraph ReviewPipeline ["Review & RAG Pipeline (src/review/)"]
         WORKER --> FETCH["Fetch Changed Files (octokit)"]
         FETCH --> FILTER["File Filtering (skip lockfiles, binaries, dist)"]
-        FILTER --> NUMBER["Numbered Diff (L<n>: +) & Legal Line Set"]
+        FILTER --> NUMBER["Numbered Diff (Line Numbers) & Legal Line Set"]
         
         NUMBER --> RAG_EMBED["Embed Diff Summary (gemini-embedding-001)"]
         RAG_EMBED --> PG[("PostgreSQL 16 + pgvector (Port 5433)")]
-        PG -->|<=> Cosine Distance| TOP_RULES["Retrieve Top 3 Style Rules"]
+        PG -->|"Cosine Distance Vector Search"| TOP_RULES["Retrieve Top 3 Style Rules"]
         
         TOP_RULES --> PROMPT["Ground Prompt (Diff + Style Rules)"]
         PROMPT --> GEMINI["Google Gemini 2.5 Flash"]

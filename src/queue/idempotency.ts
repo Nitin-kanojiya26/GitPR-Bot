@@ -16,6 +16,15 @@ export function buildIdempotencyKey(params: IdempotencyParams): string {
 }
 
 /**
+ * Constructs a BullMQ-compliant job ID.
+ * BullMQ strictly disallows colons (':') in custom job IDs.
+ */
+export function buildBullJobId(params: IdempotencyParams): string {
+  const { owner, repo, pullNumber, headSha } = params;
+  return `pr-review_${owner.toLowerCase()}_${repo.toLowerCase()}_${pullNumber}_${headSha}`;
+}
+
+/**
  * Attempts to acquire an atomic distributed lock in Redis using SET ... NX EX.
  * Returns true if lock was acquired (first request), or false if it already exists (duplicate).
  */

@@ -1,7 +1,7 @@
 import { Probot } from "probot";
 import { reviewQueue } from "./queue/reviewQueue.js";
 import { createReviewWorker } from "./queue/worker.js";
-import { buildIdempotencyKey } from "./queue/idempotency.js";
+import { buildBullJobId } from "./queue/idempotency.js";
 import { handleHealthcheck } from "./health.js";
 
 interface AppOptions {
@@ -49,7 +49,7 @@ export default (app: Probot, options?: AppOptions) => {
         installationId,
       };
 
-      const jobId = buildIdempotencyKey(jobData);
+      const jobId = buildBullJobId(jobData);
 
       // 3. Enqueue the review job with unique jobId to prevent duplicate queue items
       await reviewQueue.add("review-pr", jobData, { jobId });

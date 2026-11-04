@@ -1,11 +1,23 @@
 import { describe, it, expect } from "vitest";
 import {
   buildIdempotencyKey,
+  buildBullJobId,
   acquireReviewLock,
   releaseReviewLock,
 } from "../src/queue/idempotency.js";
 
 describe("Idempotency & Deduplication", () => {
+  it("buildBullJobId creates colon-free job IDs suitable for BullMQ", () => {
+    const jobId = buildBullJobId({
+      owner: "MyOrg",
+      repo: "MyRepo",
+      pullNumber: 42,
+      headSha: "abcdef123456",
+    });
+
+    expect(jobId).toBe("pr-review_myorg_myrepo_42_abcdef123456");
+    expect(jobId).not.toContain(":");
+  });
   it("buildIdempotencyKey generates normalized lowercase keys", () => {
     const key1 = buildIdempotencyKey({
       owner: "MyOrg",

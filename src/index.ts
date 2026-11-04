@@ -2,9 +2,22 @@ import { Probot } from "probot";
 import { reviewQueue } from "./queue/reviewQueue.js";
 import { createReviewWorker } from "./queue/worker.js";
 import { buildIdempotencyKey } from "./queue/idempotency.js";
+import { handleHealthcheck } from "./health.js";
 
-export default (app: Probot) => {
-  // Start the background review worker
+interface AppOptions {
+  addHandler?: (handler: (req: any, res: any) => Promise<boolean | void> | boolean | void) => void;
+  [key: string]: unknown;
+}
+
+export default (app: Probot, options?: AppOptions) => {
+  // 1. Register production healthcheck endpoint (/healthz and /health)
+  if (options?.addHandler) {
+    options.addHandler(async (req, res) => {
+      return handleHealthcheck(req, res);
+    });
+  }
+
+  // 2. Start the background review worker
   createReviewWorker(app);
 
   app.on(

@@ -1,0 +1,10 @@
+node_modules
+.git
+.env
+*.pem
+coverage
+.DS_Store
+evals
+test
+scripts
+

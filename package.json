@@ -14,6 +14,7 @@
     "test:rag": "node scripts/test-rag.js",
     "test:rag-review": "node scripts/test-rag-review.js",
     "test:queue": "node scripts/test-queue.js",
+    "test:idempotency": "node scripts/test-idempotency.js",
     "eval:rag": "node evals/eval-rag.js",
     "dev": "probot run ./lib/index.js"
   },

@@ -3,6 +3,7 @@ import Redis from "ioredis";
 import { Probot } from "probot";
 import { ReviewJobData, QUEUE_NAME } from "./reviewQueue.js";
 import { reviewPullRequest } from "../review/reviewPR.js";
+import { acquireReviewLock } from "./idempotency.js";
 
 /**
  * Creates and starts a BullMQ Worker to process asynchronous PR review jobs.
@@ -18,6 +19,22 @@ export function createReviewWorker(app: Probot): Worker<ReviewJobData> {
     QUEUE_NAME,
     async (job: Job<ReviewJobData>) => {
       const { owner, repo, pullNumber, headSha, installationId } = job.data;
+
+      // Idempotency check: Ensure duplicate deliveries for the same commit are discarded
+      const hasLock = await acquireReviewLock(workerConnection, {
+        owner,
+        repo,
+        pullNumber,
+        headSha,
+      });
+
+      if (!hasLock) {
+        app.log.warn(
+          `[WARN] Skipping duplicate review for ${owner}/${repo}#${pullNumber} (${headSha.slice(0, 7)}) - already processed or in progress.`
+        );
+        return;
+      }
+
       app.log.info(
         `[INFO] Processing queued review job for ${owner}/${repo}#${pullNumber} (${headSha.slice(0, 7)})`
       );

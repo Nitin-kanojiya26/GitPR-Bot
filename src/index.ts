@@ -1,6 +1,7 @@
 import { Probot } from "probot";
 import { reviewQueue } from "./queue/reviewQueue.js";
 import { createReviewWorker } from "./queue/worker.js";
+import { buildIdempotencyKey } from "./queue/idempotency.js";
 
 export default (app: Probot) => {
   // Start the background review worker
@@ -27,15 +28,18 @@ export default (app: Probot) => {
       });
 
       const installationId = context.payload.installation?.id;
-
-      // 3. Enqueue the review job for asynchronous background processing
-      await reviewQueue.add("review-pr", {
+      const jobData = {
         owner: context.payload.repository.owner.login,
         repo: context.payload.repository.name,
         pullNumber: pr.number,
         headSha: livePR.head.sha,
         installationId,
-      });
+      };
+
+      const jobId = buildIdempotencyKey(jobData);
+
+      // 3. Enqueue the review job with unique jobId to prevent duplicate queue items
+      await reviewQueue.add("review-pr", jobData, { jobId });
 
       context.log.info(
         `[SUCCESS] Enqueued review job for PR #${pr.number} at commit ${livePR.head.sha.slice(0, 7)}. Responding HTTP 200 immediately.`

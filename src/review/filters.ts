@@ -83,3 +83,33 @@ export function shouldReviewFile(file: ChangedFile): { review: boolean; reason?:
 
     return { review: true };
 }
+
+
+export interface ExistingComment {
+    path?: string;
+    line?: number | null;
+    original_line?: number | null;
+}
+
+/**
+ * Filters out comments that have already been posted on this PR to prevent duplicate spam across commits.
+ */
+export function filterDuplicateComments<T extends { file: string; line: number }>(
+    candidateComments: T[],
+    existingComments: ExistingComment[]
+): T[] {
+    const existingSet = new Set<string>();
+
+    for (const c of existingComments) {
+        const lineNum = c.line ?? c.original_line;
+        if (c.path && lineNum) {
+            const normalizedPath = c.path.replace(/^\.?\//, "").trim();
+            existingSet.add(`${normalizedPath}:${lineNum}`);
+        }
+    }
+
+    return candidateComments.filter((candidate) => {
+        const normalizedFile = candidate.file.replace(/^\.?\//, "").trim();
+        return !existingSet.has(`${normalizedFile}:${candidate.line}`);
+    });
+}

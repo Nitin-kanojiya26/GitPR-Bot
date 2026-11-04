@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { shouldReviewFile } from "../src/review/filters.js";
+import { shouldReviewFile, filterDuplicateComments } from "../src/review/filters.js";
 
 describe("shouldReviewFile", () => {
     it("allows standard source code files with patches", () => {
@@ -91,5 +91,47 @@ describe("shouldReviewFile", () => {
         });
         expect(result.review).toBe(false);
         expect(result.reason).toContain("Diff too large");
+    });
+});
+
+describe("filterDuplicateComments", () => {
+    it("drops comments on files and lines that were already commented on", () => {
+        const candidates = [
+            { file: "src/calc.js", line: 5, comment: "Bug in mul", severity: "high" as const },
+            { file: "src/calc.js", line: 8, comment: "Eval is dangerous", severity: "high" as const },
+            { file: "src/utils.js", line: 12, comment: "Missing error handling", severity: "medium" as const },
+        ];
+
+        const existing = [
+            { path: "src/calc.js", line: 5 },
+            { path: "src/calc.js", line: 8 },
+        ];
+
+        const filtered = filterDuplicateComments(candidates, existing);
+        expect(filtered.length).toBe(1);
+        expect(filtered[0].file).toBe("src/utils.js");
+        expect(filtered[0].line).toBe(12);
+    });
+
+    it("returns all candidates when no comments exist yet", () => {
+        const candidates = [
+            { file: "src/calc.js", line: 5, comment: "Bug", severity: "high" as const },
+        ];
+
+        const filtered = filterDuplicateComments(candidates, []);
+        expect(filtered.length).toBe(1);
+    });
+
+    it("normalizes path differences like leading ./ or /", () => {
+        const candidates = [
+            { file: "calc.js", line: 8, comment: "Eval is dangerous", severity: "high" as const },
+        ];
+
+        const existing = [
+            { path: "./calc.js", line: 8 },
+        ];
+
+        const filtered = filterDuplicateComments(candidates, existing);
+        expect(filtered.length).toBe(0);
     });
 });

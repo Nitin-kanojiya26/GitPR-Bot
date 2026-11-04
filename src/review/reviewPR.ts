@@ -1,6 +1,6 @@
 import { Context } from "probot";
 import { getCommentableLines, numberedDiff } from "./diff.js";
-import { shouldReviewFile } from "./filters.js";
+import { shouldReviewFile, filterDuplicateComments } from "./filters.js";
 import { generateReview, ReviewComment } from "./llm.js";
 import { retrieveRules, formatRulesForPrompt } from "./rag.js";
 
@@ -123,8 +123,46 @@ export async function reviewPullRequest(
     );
     const finalComments = validComments.slice(0, 10);
 
-    // 6. Post review to GitHub
-    if (finalComments.length === 0) {
+    // 6. Deduplication Defense: Fetch existing comments to prevent posting duplicates across commits
+    let existingComments: any[] = [];
+    try {
+      const { data } = await octokit.rest.pulls.listReviewComments({
+        owner,
+        repo,
+        pull_number: pullNumber,
+        per_page: 100,
+      });
+      existingComments = data;
+    } catch (err: any) {
+      log.warn(`[WARN] Could not fetch existing PR comments for deduplication: ${err?.message || err}`);
+    }
+
+    const newComments = filterDuplicateComments(finalComments, existingComments);
+
+    if (newComments.length === 0) {
+      if (finalComments.length > 0) {
+        log.info(
+          `[INFO] All ${finalComments.length} detected issue(s) were already commented on in previous commits. Skipping redundant review post.`
+        );
+        return;
+      }
+
+      // Check if PR was already reviewed previously
+      try {
+        const { data: existingReviews } = await octokit.rest.pulls.listReviews({
+          owner,
+          repo,
+          pull_number: pullNumber,
+          per_page: 10,
+        });
+        if (existingReviews.length > 0) {
+          log.info(`[INFO] PR #${pullNumber} was already reviewed previously. Skipping duplicate approval comment.`);
+          return;
+        }
+      } catch {
+        // Continue to post initial approval if listReviews fails
+      }
+
       log.info(`No bugs or code issues found. Posting approval comment.`);
       await octokit.rest.pulls.createReview({
         owner,
@@ -138,7 +176,7 @@ export async function reviewPullRequest(
     }
 
     // Map comments to GitHub's Review API structure
-    const githubComments = finalComments.map((c) => ({
+    const githubComments = newComments.map((c) => ({
       path: c.file,
       line: c.line,
       side: "RIGHT" as const,
@@ -151,11 +189,11 @@ export async function reviewPullRequest(
       pull_number: pullNumber,
       commit_id: headSha,
       event: "COMMENT",
-      body: `🤖 **AI Pull Request Review**\nFound ${finalComments.length} recommendation(s) in this pull request:`,
+      body: `🤖 **AI Pull Request Review**\nFound ${newComments.length} recommendation(s) in this pull request:`,
       comments: githubComments,
     });
 
-    log.info(`[SUCCESS] Successfully posted AI review with ${finalComments.length} comment(s)!`);
+    log.info(`[SUCCESS] Successfully posted AI review with ${newComments.length} comment(s)!`);
   } catch (error) {
     log.error(`[ERROR] Review failed for PR #${pullNumber}:`, error);
   }

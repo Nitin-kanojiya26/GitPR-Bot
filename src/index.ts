@@ -2,8 +2,8 @@ import { Probot } from "probot";
 import { reviewQueue } from "./queue/reviewQueue.js";
 import { createReviewWorker } from "./queue/worker.js";
 import { buildBullJobId } from "./queue/idempotency.js";
-import { handleHealthcheck } from "./health.js";
 import { learnFromReviewComment } from "./review/learner.js";
+import { createWebApp } from "./web/app.js";
 
 interface AppOptions {
   addHandler?: (handler: (req: any, res: any) => Promise<boolean | void> | boolean | void) => void;
@@ -11,11 +11,10 @@ interface AppOptions {
 }
 
 export default (app: Probot, options?: AppOptions) => {
-  // 1. Register production healthcheck endpoint (/healthz and /health)
+  // 1. Mount unified Express web application (Landing, Dashboard, Settings, Health)
   if (options?.addHandler) {
-    options.addHandler(async (req, res) => {
-      return handleHealthcheck(req, res);
-    });
+    const webApp = createWebApp(app);
+    options.addHandler(webApp);
   }
 
   // 2. Start the background review worker

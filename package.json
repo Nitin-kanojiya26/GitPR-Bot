@@ -22,6 +22,8 @@
   "dependencies": {
     "@google/genai": "^2.32.0",
     "bullmq": "^6.5.4",
+    "ejs": "^7.0.2",
+    "express": "^5.3.0",
     "ioredis": "^6.0.0",
     "parse-diff": "^0.12.0",
     "pg": "^8.23.1",
@@ -30,6 +32,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^22.13.4",
     "@types/pg": "^8.23.1",
     "smee-client": "^5.0.0",

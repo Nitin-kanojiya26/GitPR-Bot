@@ -1,0 +1,40 @@
+<%- include('partials/header') %>
+
+<main class="container">
+  <section class="hero">
+    <h1>Autonomous AI Code Reviews Grounded in Your Team Standards</h1>
+    <p>
+      GitPR installs directly into your GitHub repositories. It reviews changed lines in pull requests, catches critical bugs and security flaws, and strictly enforces your team's custom style guide.
+    </p>
+    <div class="hero-actions">
+      <a href="<%= installUrl %>" class="btn btn-primary" target="_blank" rel="noopener">Install on GitHub</a>
+      <a href="/setup" class="btn btn-secondary">Configure Your Key</a>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="feature-card">
+      <h3>Bring Your Own Gemini Key</h3>
+      <p>Zero subscription fees. Provide your own free-tier Google Gemini API key. Stored encrypted with AES-256-GCM and never shared.</p>
+    </div>
+
+    <div class="feature-card">
+      <h3>Custom Style Guides & RAG</h3>
+      <p>Edit your review guidelines in Markdown. Powered by PostgreSQL <code>pgvector</code> semantic search to match rules directly to diff context.</p>
+    </div>
+
+    <div class="feature-card">
+      <h3>Four-Panel Analytics</h3>
+      <p>Track weekly review volume, top triggered style rules, fix vs ignore ratios, and inspect full review histories in one dashboard.</p>
+    </div>
+  </section>
+
+  <section style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; margin-bottom: 60px;">
+    <h3 style="color: var(--text-heading); margin-bottom: 8px;">Zero Installation Required</h3>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+      GitPR is a cloud-hosted GitHub App. Developers on your team never download binaries, configure CLI tools, or modify CI pipelines. Simply click Install, select your repositories, and receive instant reviews on your next Pull Request.
+    </p>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

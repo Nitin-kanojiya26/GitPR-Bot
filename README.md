@@ -1,6 +1,14 @@
 # GitPR-Bot: Autonomous AI Pull Request Reviewer
 
-An enterprise-grade, production-hardened GitHub App that automatically reviews pull requests with line-level accuracy, grounded in your team's engineering standards using **Retrieval-Augmented Generation (RAG)**, **PostgreSQL (`pgvector`)**, and **Google Gemini 2.5**.
+<div align="center">
+
+[![Live Web App](https://img.shields.io/badge/Live_Dashboard-gitpr--bot.onrender.com-000000?style=for-the-badge&logo=render)](https://gitpr-bot.onrender.com)
+[![Install App](https://img.shields.io/badge/GitHub_App-Install_GitPR-2ea44f?style=for-the-badge&logo=github)](https://github.com/apps/gitpr-bot)
+[![Health Status](https://img.shields.io/badge/System_Health-Operational-brightgreen?style=for-the-badge)](https://gitpr-bot.onrender.com/health)
+
+### [🚀 Open Live Dashboard & Settings](https://gitpr-bot.onrender.com) &bull; [📦 Install on Your GitHub Repositories](https://github.com/apps/gitpr-bot)
+
+</div>
 
 ---
 

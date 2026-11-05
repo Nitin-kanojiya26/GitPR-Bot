@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatRulesForPrompt, RetrievedRule } from "../src/review/rag.js";
+import { formatRulesForPrompt, retrieveRules, RetrievedRule } from "../src/review/rag.js";
 
 describe("RAG Rule Formatting", () => {
   it("returns empty string when given empty list or null", () => {
@@ -40,6 +40,11 @@ describe("RAG Rule Formatting", () => {
     expect(output).toContain("[Rule 1] Rule A");
     expect(output).toContain("[Rule 2] Rule B");
     expect(output.indexOf("[Rule 1]")).toBeLessThan(output.indexOf("[Rule 2]"));
+  });
+
+  it("retrieveRules handles empty query gracefully", async () => {
+    const results = await retrieveRules("");
+    expect(results).toEqual([]);
   });
 });
 

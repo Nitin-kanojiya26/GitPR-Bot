@@ -27,7 +27,8 @@ export function formatRulesForPrompt(rules: RetrievedRule[]): string {
  */
 export async function retrieveRules(
   query: string,
-  limit: number = 3
+  limit: number = 3,
+  repoFullName: string = "global"
 ): Promise<RetrievedRule[]> {
   const apiKey = process.env.LLM_API_KEY;
   const dbUrl = process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5433/reviewbot";
@@ -66,11 +67,12 @@ export async function retrieveRules(
     const sql = `
       SELECT title, content, (1 - (embedding <=> $1::vector)) AS similarity
       FROM style_rules
+      WHERE repo_full_name = $3 OR repo_full_name = 'global'
       ORDER BY embedding <=> $1::vector
       LIMIT $2;
     `;
 
-    const result = await client.query(sql, [JSON.stringify(embedding), limit]);
+    const result = await client.query(sql, [JSON.stringify(embedding), limit, repoFullName]);
 
     return result.rows.map((row) => ({
       title: row.title,

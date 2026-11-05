@@ -42,3 +42,4 @@ describe("Database Migration System", () => {
     vi.restoreAllMocks();
   });
 });
+

@@ -81,3 +81,4 @@ CREATE TABLE IF NOT EXISTS sessions (
   expire TIMESTAMP NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_expire ON sessions (expire);
+

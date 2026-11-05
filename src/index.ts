@@ -4,6 +4,10 @@ import { createReviewWorker } from "./queue/worker.js";
 import { buildBullJobId } from "./queue/idempotency.js";
 import { learnFromReviewComment } from "./review/learner.js";
 import { createWebApp } from "./web/app.js";
+import {
+  handleInstallationCreated,
+  handleInstallationDeleted,
+} from "./installations/service.js";
 
 interface AppOptions {
   addHandler?: (handler: (req: any, res: any) => Promise<boolean | void> | boolean | void) => void;
@@ -82,4 +86,38 @@ export default (app: Probot, options?: AppOptions) => {
       context.log
     );
   });
+
+  // 4. Installation Lifecycle Events: Onboard and purge tenants
+  app.on("installation.created", async (context) => {
+    const inst = context.payload.installation;
+    const account = inst.account as any;
+    const accountLogin = account?.login || account?.name || account?.slug || "unknown";
+    const accountType = account?.type || "User";
+
+    context.log.info(
+      `[INFO] Installation created: #${inst.id} for ${accountLogin} (${accountType})`
+    );
+    await handleInstallationCreated(inst.id, accountLogin, accountType);
+  });
+
+  app.on("installation.deleted", async (context) => {
+    const inst = context.payload.installation;
+    const account = inst.account as any;
+    const accountLogin = account?.login || account?.name || account?.slug || "unknown";
+
+    context.log.info(
+      `[INFO] Installation deleted: #${inst.id} for ${accountLogin}. Purging all tenant data.`
+    );
+    await handleInstallationDeleted(inst.id);
+  });
+
+  app.on(
+    ["installation_repositories.added", "installation_repositories.removed"],
+    async (context) => {
+      const inst = context.payload.installation;
+      context.log.info(
+        `[INFO] Installation repositories updated for #${inst.id} (${context.payload.action})`
+      );
+    }
+  );
 };

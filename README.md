@@ -107,7 +107,9 @@ flowchart TD
 | **Vector Database** | PostgreSQL 16 + `pgvector` | In-database cosine similarity search (`<=>`) |
 | **Queue & Cache** | BullMQ + Redis | Background job processing and atomic distributed locks |
 | **Schema Validation** | Zod | Runtime validation for LLM outputs |
-| **Unit Testing** | Vitest | Fast TypeScript unit testing (25 passing tests) |
+| **Web UI & Multi-Tenancy** | Express 5, EJS, Chart.js | Minimalist black dashboard, BYOK settings, multi-tenant isolation |
+| **Data Protection** | AES-256-GCM (node:crypto) | Encryption of tenant Gemini keys with unique 96-bit IVs |
+| **Unit Testing** | Vitest | Comprehensive suite (126 passing tests across 19 suites) |
 | **Containerization** | Docker & Docker Compose | Multi-stage image build and service orchestration |
 
 ---
@@ -124,25 +126,77 @@ vigilentia/
 ├── evals/
 │   ├── cases.json            # Labeled test diffs for benchmarking retrieval
 │   └── eval-rag.js           # RAG evaluation script measuring Hit Rate @ 3
+├── public/
+│   └── css/
+│       └── style.css         # Minimalist black design system & Inter typography
 ├── src/
-│   ├── index.ts              # Probot entrypoint & webhook router
-│   ├── health.ts             # Healthcheck service & HTTP handler (/healthz)
-│   ├── queue/
-│   │   ├── idempotency.ts    # Redis distributed lock implementation
+│   ├── dashboard/            # 4-panel analytics: volume, top rules, outcome ratios
+│   │   ├── routes.ts
+│   │   └── service.ts
+│   ├── db/
+│   │   ├── client.ts         # PostgreSQL pg pool & query helper
+│   │   └── migrate.ts        # Atomic schema migration runner
+│   ├── installations/        # Multi-tenant installation & rule sync service
+│   │   └── service.ts
+│   ├── queue/                # Asynchronous queue & worker pipeline
+│   │   ├── delivery.ts       # Webhook delivery deduplication
+│   │   ├── idempotency.ts    # Redis distributed atomic locks
 │   │   ├── reviewQueue.ts    # BullMQ queue configuration
 │   │   └── worker.ts         # BullMQ background review worker
-│   └── review/
-│       ├── diff.ts           # Numbered diffs & legal line number calculations
-│       ├── filters.ts        # File filtering rules (lockfiles, minified, binaries)
-│       ├── github.ts         # Octokit review comment posting wrapper
-│       ├── llm.ts            # Swappable Gemini client, Zod schemas, auto-retry
-│       ├── rag.ts            # pgvector semantic rule retriever
-│       └── reviewPR.ts       # Main review orchestrator
-├── test/                     # 126 automated Vitest test suites
+│   ├── review/               # AI review engine & pgvector RAG
+│   │   ├── diff.ts           # Numbered diffs & legal line number calculations
+│   │   ├── embed.ts          # 768-D code embedding via gemini-embedding-001
+│   │   ├── filters.ts        # File filtering & smart outdated comment deduplication
+│   │   ├── github.ts         # Octokit review comment posting wrapper
+│   │   ├── learner.ts        # Feedback learning from thread resolutions
+│   │   ├── llm.ts            # Gemini 2.5 client, Zod schemas, auto-retry
+│   │   ├── outcomes.ts       # Fixed vs ignored resolution tracking
+│   │   ├── persistence.ts    # Review & comment audit persistence
+│   │   ├── rag.ts            # pgvector semantic rule retriever
+│   │   └── reviewPR.ts       # Main review orchestrator
+│   ├── security/             # AES-256-GCM BYOK encryption & decryption
+│   │   └── crypto.ts
+│   ├── settings/             # BYOK key management & custom style guide editor
+│   │   ├── routes.ts
+│   │   └── service.ts
+│   ├── web/                  # Express web application, GitHub OAuth & CSRF
+│   │   ├── app.ts
+│   │   ├── auth.ts
+│   │   └── csrf.ts
+│   ├── env.ts                # Synchronous environment bootstrap & sanitization
+│   ├── health.ts             # Healthcheck service & HTTP handler (/healthz)
+│   └── index.ts              # Probot entrypoint & webhook router
+├── test/                     # 19 Vitest test suites (126 tests)
+│   ├── auth.test.ts          # Multi-tenant auth & OAuth callback tests
+│   ├── crypto.test.ts        # AES-256-GCM encryption tests
+│   ├── dashboard.test.ts     # Analytics metrics & outcome rate tests
+│   ├── diff.test.ts          # Diff parsing & legal line calculation tests
+│   ├── filters.test.ts       # File filters & outdated comment tests
+│   ├── guide.test.ts         # Markdown rule parsing & RAG retrieval tests
+│   ├── health.test.ts        # Deep /healthz dependency probe tests
+│   ├── idempotency.test.ts   # Redis atomic lock tests
+│   ├── installation.test.ts  # Multi-tenant tenant initialization tests
+│   ├── isolation.test.ts     # Multi-tenant isolation & security audit tests
+│   ├── learner.test.ts       # Review resolution learning tests
+│   ├── llm.test.ts           # Zod schema validation & prompt generation tests
+│   ├── migrate.test.ts       # Database migration runner tests
+│   ├── outcomes.test.ts      # Comment resolution rate calculation tests
+│   ├── persistence.test.ts   # Review audit log persistence tests
+│   ├── rag.test.ts           # Cosine similarity vector search tests
+│   ├── reliability.test.ts   # Queue resilience & backoff tests
+│   ├── settings.test.ts      # BYOK rate limit & key verification tests
+│   └── web.test.ts           # Express routing & reverse proxy trust tests
+├── views/                    # Responsive EJS views with dark mode aesthetic
+│   ├── partials/             # Header, footer, and navigation
+│   ├── dashboard.ejs         # 4-panel interactive Chart.js analytics
+│   ├── index.ejs             # Product landing page
+│   ├── privacy.ejs           # Data protection & encryption privacy policy
+│   └── settings.ejs          # BYOK key & live style guide editor
 ├── .dockerignore             # Protects credentials and secrets from Docker builds
 ├── docker-compose.yml        # Orchestration for bot, postgres-pgvector, and redis
 ├── Dockerfile                # Multi-stage production container build
 ├── package.json              # NPM dependencies and scripts
+├── render.yaml               # Infrastructure-as-Code for Render deployment
 └── tsconfig.json             # TypeScript compiler configuration
 ```
 
@@ -215,22 +269,20 @@ docker run -d --name app-redis -p 6380:6379 redis:7-alpine
 
 ---
 
-### Step 4: Seed the Style Guide into pgvector
+### Step 4: Run Database Migrations
 
-Run the idempotent database seed script to chunk [`docs/style-guide.md`](docs/style-guide.md), compute 768-D embeddings, and insert them into PostgreSQL:
+Run the schema migrations to enable `pgvector` and initialize the multi-tenant tables (`installations`, `installation_settings`, `rules`, `reviews`, `comments`):
 
 ```bash
-npm run seed
+npm run migrate
 ```
 
 Output:
 ```
-[INFO] Starting style guide database seed...
-[INFO] Schema initialized with vector extension.
-[INFO] Found 10 rules in docs/style-guide.md
-[INFO] Embedding rule [1/10]: "1. Network Requests Must Have Timeouts and Error Handling"...
-...
-[SUCCESS] Successfully embedded and stored 10 rules into pgvector!
+[INFO] Connecting to database...
+[INFO] Running migration: 001_initial_schema.sql
+[SUCCESS] Applied migration 001_initial_schema.sql (took 32ms)
+[SUCCESS] All schema migrations up to date!
 ```
 
 ---

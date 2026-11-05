@@ -4,11 +4,11 @@
   <div class="page-header">
     <div>
       <h1>Installation Settings</h1>
-      <p class="subtitle">Manage your Gemini API key and customized review guide.</p>
+      <p class="subtitle">Manage your encrypted Gemini BYOK credentials and team review guidelines.</p>
     </div>
     <% if (installations && installations.length > 1) { %>
       <div class="installation-selector">
-        <label for="inst-select">Active Account:</label>
+        <label for="inst-select" style="font-size: 0.8rem; color: var(--text-muted); margin-right: 6px;">Active Account:</label>
         <select id="inst-select" onchange="window.location.href='/settings?installation_id=' + this.value">
           <% installations.forEach(function(inst) { %>
             <option value="<%= inst.installation_id %>" <%= inst.installation_id == selectedInstallationId ? 'selected' : '' %>>
@@ -22,7 +22,7 @@
 
   <% if (success) { %>
     <div class="alert alert-success">
-      <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
         <path d="M8 16A8 8 0 108 0a8 8 0 000 16zm3.78-9.72a.75.75 0 00-1.06-1.06L7 8.94 5.28 7.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.06 0l4.25-4.25z"></path>
       </svg>
       <span><%= success %></span>
@@ -31,7 +31,7 @@
 
   <% if (error) { %>
     <div class="alert alert-error">
-      <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
         <path d="M8 16A8 8 0 108 0a8 8 0 000 16zM7.25 4.75a.75.75 0 011.5 0v4.5a.75.75 0 01-1.5 0v-4.5zm.75 8a1 1 0 110-2 1 1 0 010 2z"></path>
       </svg>
       <span><%= error %></span>
@@ -53,7 +53,7 @@
         <div class="card-header">
           <div>
             <h2>Google Gemini API Key</h2>
-            <p class="card-subtitle">Bring Your Own Key (Free Tier). Stored with AES-256-GCM encryption.</p>
+            <p class="card-subtitle">Bring-Your-Own-Key model. Encrypted with AES-256-GCM.</p>
           </div>
           <% if (settings.last4) { %>
             <span class="badge badge-success">Active (&bull;&bull;&bull;&bull; <%= settings.last4 %>)</span>
@@ -65,39 +65,41 @@
         <div class="card-body">
           <% if (settings.last4) { %>
             <div class="key-status-box">
-              <div class="key-display">
-                <span class="key-dots">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull;</span>
-                <span class="key-last4"><%= settings.last4 %></span>
+              <div>
+                <div class="key-display">
+                  <span class="key-dots">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull;</span>
+                  <span class="key-last4"><%= settings.last4 %></span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Key is verified and ready. Encrypted with random 96-bit IV in PostgreSQL.</p>
               </div>
-              <p class="text-muted">Key is active and ready. Encrypted with random IV in database.</p>
-            </div>
 
-            <div class="key-actions">
-              <details class="replace-key-details">
-                <summary class="btn btn-secondary">Replace API Key</summary>
-                <form action="/settings/key" method="POST" class="form-stacked" style="margin-top: 15px;">
+              <div class="key-actions">
+                <details class="replace-key-details">
+                  <summary class="btn btn-secondary btn-sm" style="cursor: pointer;">Replace Key</summary>
+                  <form action="/settings/key" method="POST" class="form-stacked" style="margin-top: 15px;">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="installation_id" value="<%= settings.installation_id %>">
+                    <div class="form-group">
+                      <label for="replace_api_key">New Gemini API Key:</label>
+                      <input type="password" id="replace_api_key" name="api_key" class="form-control" placeholder="AIzaSy..." required autocomplete="off">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Test & Update Key</button>
+                  </form>
+                </details>
+
+                <form action="/settings/key/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this API key? Automated reviews will pause until a new key is added.');">
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <input type="hidden" name="installation_id" value="<%= settings.installation_id %>">
-                  <div class="form-group">
-                    <label for="replace_api_key">New Gemini API Key:</label>
-                    <input type="password" id="replace_api_key" name="api_key" class="form-control" placeholder="AIzaSy..." required autocomplete="off">
-                  </div>
-                  <button type="submit" class="btn btn-primary">Test & Update Key</button>
+                  <button type="submit" class="btn btn-danger btn-sm">Delete Key</button>
                 </form>
-              </details>
-
-              <form action="/settings/key/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this API key? Automated reviews will pause until a new key is added.');">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <input type="hidden" name="installation_id" value="<%= settings.installation_id %>">
-                <button type="submit" class="btn btn-danger">Delete Key</button>
-              </form>
+              </div>
             </div>
           <% } else { %>
             <div class="no-key-guide">
-              <p>GitPR requires a free Google Gemini API key to review pull requests for your repository.</p>
-              <ol class="setup-steps">
-                <li>Create a dedicated free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio &nearr;</a></li>
-                <li>Paste the key below. GitPR will ping Gemini once to verify the key, then encrypt it with AES-256-GCM.</li>
+              <p style="color: var(--text-secondary); font-size: 0.95rem;">GitPR requires a free Google Gemini API key to review pull requests for your repository.</p>
+              <ol class="setup-steps" style="margin: 12px 0 20px 22px; color: var(--text-secondary);">
+                <li style="margin-bottom: 6px;">Create a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color: #818cf8;">Google AI Studio &nearr;</a></li>
+                <li style="margin-bottom: 6px;">Paste the key below. GitPR will ping Gemini once to verify the key, then encrypt it with AES-256-GCM.</li>
               </ol>
 
               <form action="/settings/key" method="POST" class="form-stacked">
@@ -112,9 +114,9 @@
             </div>
           <% } %>
 
-          <div class="security-callout">
-            <strong>Security Guarantee:</strong>
-            <ul>
+          <div style="background-color: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: var(--radius-sm); padding: 16px; margin-top: 16px; font-size: 0.85rem;">
+            <strong style="color: #a5b4fc;">Security Architecture:</strong>
+            <ul style="margin: 8px 0 0 20px; color: var(--text-secondary);">
               <li>Encrypted using AES-256-GCM with a distinct 96-bit initialization vector.</li>
               <li>Decrypted only in-memory during review jobs; never logged or sent to browsers.</li>
               <li>You can rotate or delete your key at any time.</li>
@@ -128,19 +130,19 @@
         <div class="card-header">
           <div>
             <h2>Review Style Guide</h2>
-            <p class="card-subtitle">Custom rules parsed, embedded, and retrieved with pgvector RAG per PR.</p>
+            <p class="card-subtitle">Custom standards vectorized with pgvector RAG for relevant retrieval per PR.</p>
           </div>
           <% if (settings.index_status === 'indexed') { %>
             <span class="badge badge-success">Indexed (v<%= settings.guide_version %>)</span>
           <% } else if (settings.index_status === 'failed') { %>
-            <span class="badge badge-warning" style="color: var(--danger); border-color: rgba(248,81,73,0.4);">Index Failed</span>
+            <span class="badge badge-danger">Index Failed</span>
           <% } else { %>
             <span class="badge badge-warning"><%= settings.index_status || 'Pending' %> (v<%= settings.guide_version %>)</span>
           <% } %>
         </div>
 
         <div class="card-body">
-          <p class="text-muted" style="margin-bottom: 14px;">
+          <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 14px;">
             Edit your team's code review guidelines below. When you click <strong>Save & Re-Index</strong>, GitPR splits each <code>## </code> rule, generates 768-dimensional vector embeddings, and atomically swaps your rules in the database.
           </p>
 
@@ -149,9 +151,11 @@
             <input type="hidden" name="installation_id" value="<%= settings.installation_id %>">
 
             <div class="form-group">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <label for="guide_md" style="font-weight: 600;">Guide Markdown:</label>
-                <span id="char-count" class="text-muted" style="font-size: 0.85rem;">Max 20,000 characters &bull; Max 30 rules</span>
+                <span id="char-count" style="font-size: 0.82rem; color: var(--text-muted);">
+                  Max 20,000 characters &bull; Max 30 rules
+                </span>
               </div>
               <textarea
                 name="guide_md"
@@ -162,19 +166,23 @@
                 placeholder="# Team Style Guide&#10;&#10;## 1. Rule Title&#10;Explanation...&#10;&#10;### ❌ Bad Example&#10;...&#10;&#10;### ✅ Good Example&#10;..."
                 required
               ><%= settings.guide_md || '' %></textarea>
+              <div class="editor-counter-bar">
+                <span id="live-rule-count">Rules detected: 0 / 30</span>
+                <span id="live-char-count">0 / 20,000 chars</span>
+              </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 10px;">
-              <span class="text-muted" style="font-size: 0.85rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 14px;">
+              <span style="font-size: 0.82rem; color: var(--text-muted);">
                 Last updated: <%= settings.updated_at ? new Date(settings.updated_at).toLocaleString() : 'Never' %>
               </span>
               <button type="submit" class="btn btn-primary">Save & Re-Index Guide</button>
             </div>
           </form>
 
-          <div class="security-callout" style="margin-top: 20px;">
-            <strong>Atomic Re-Indexing & Safety:</strong>
-            <ul>
+          <div style="background-color: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: var(--radius-sm); padding: 16px; margin-top: 24px; font-size: 0.85rem;">
+            <strong style="color: #a5b4fc;">Atomic Re-Indexing & Safety:</strong>
+            <ul style="margin: 8px 0 0 20px; color: var(--text-secondary);">
               <li><strong>Zero Partial States:</strong> Rule deletions and re-indexing execute inside a single PostgreSQL transaction. Running reviews see either the complete old guide or the complete new guide.</li>
               <li><strong>Prompt Injection Defense:</strong> Style guide rules are treated as UNTRUSTED DATA in the LLM prompt. Text inside rules cannot override bot system instructions.</li>
               <li><strong>Embedding Dimension:</strong> Generated using Google Gemini 768-dimensional embeddings stored in a pgvector column.</li>
@@ -186,5 +194,34 @@
   <% } %>
 </div>
 
-<%- include('partials/footer') %>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const textarea = document.getElementById("guide_md");
+    const ruleCounter = document.getElementById("live-rule-count");
+    const charCounter = document.getElementById("live-char-count");
 
+    function updateStats() {
+      if (!textarea) return;
+      const text = textarea.value || "";
+      const chars = text.length;
+      const rules = (text.match(/^##\s+.+$/gm) || []).length;
+
+      if (charCounter) {
+        charCounter.textContent = `${chars.toLocaleString()} / 20,000 chars`;
+        charCounter.style.color = chars > 19000 ? "#f87171" : "#64748b";
+      }
+
+      if (ruleCounter) {
+        ruleCounter.textContent = `Rules detected: ${rules} / 30`;
+        ruleCounter.style.color = rules > 30 ? "#f87171" : "#64748b";
+      }
+    }
+
+    if (textarea) {
+      textarea.addEventListener("input", updateStats);
+      updateStats();
+    }
+  });
+</script>
+
+<%- include('partials/footer') %>

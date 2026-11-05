@@ -1,73 +1,73 @@
 <%- include('partials/header') %>
 
-<div class="container privacy-page" style="max-width: 860px; margin: 40px auto 60px;">
-  <div class="page-header" style="margin-bottom: 30px;">
+<div class="container privacy-page" style="max-width: 880px; margin: 40px auto 60px;">
+  <div class="page-header" style="margin-bottom: 32px;">
     <div>
-      <h1 style="font-size: 2.2rem; margin-bottom: 8px;">GitPR Privacy Policy</h1>
+      <h1>GitPR Privacy Policy</h1>
       <p class="subtitle" style="font-size: 1.05rem;">
         Plain-language explanations of how GitPR handles code diffs, API keys, style rules, and data deletion.
       </p>
-      <span class="text-muted" style="font-size: 0.85rem;">Last updated: November 2026</span>
+      <span style="font-size: 0.8rem; color: var(--text-muted); display: inline-block; margin-top: 6px;">Last updated: November 2026</span>
     </div>
   </div>
 
-  <div class="card" style="padding: 32px; line-height: 1.7; display: flex; flex-direction: column; gap: 28px;">
+  <div class="card" style="padding: 36px; display: flex; flex-direction: column; gap: 32px;">
     <!-- Section 1 -->
     <section>
-      <h2 style="color: var(--text-heading); font-size: 1.35rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+      <h2 style="font-size: 1.3rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
         <span class="badge badge-info">1</span> Code Diffs & LLM Processing
       </h2>
-      <p>
+      <p style="color: var(--text-secondary); line-height: 1.7;">
         When you open or update a pull request, GitPR receives a webhook from GitHub containing the changed file diffs.
       </p>
-      <ul style="margin: 10px 0 10px 22px; color: var(--text-primary);">
-        <li><strong>Ephemeral Diff Transmission:</strong> Diffs are sent directly to the Google Gemini API to analyze for bugs and security vulnerabilities.</li>
-        <li><strong>Zero Permanent Code Storage:</strong> GitPR does <em>not</em> store your source code or diffs in our database or on disk. Once the review is posted, diffs are immediately discarded from memory.</li>
-        <li><strong>Model Training Protection:</strong> Prompts sent through the Google GenAI API with your API key are governed by Google's API data terms and are not used to train or improve foundational models.</li>
-        <li><strong>Prompt Injection Defense:</strong> Diffs and team style guide rules are strictly categorized as <em>untrusted data</em> in our system prompt. Instructions contained inside code or comments cannot override bot controls.</li>
+      <ul style="margin: 12px 0 12px 24px; color: var(--text-secondary); line-height: 1.8;">
+        <li><strong style="color: var(--text-primary);">Ephemeral Diff Transmission:</strong> Diffs are sent directly to the Google Gemini API to analyze for bugs and security vulnerabilities.</li>
+        <li><strong style="color: var(--text-primary);">Zero Permanent Code Storage:</strong> GitPR does <em>not</em> store your source code or diffs in our database or on disk. Once the review is posted, diffs are immediately discarded from memory.</li>
+        <li><strong style="color: var(--text-primary);">Model Training Protection:</strong> Prompts sent through the Google GenAI API with your API key are governed by Google's API data terms and are not used to train or improve foundational models.</li>
+        <li><strong style="color: var(--text-primary);">Prompt Injection Defense:</strong> Diffs and team style guide rules are strictly categorized as <em>untrusted data</em> in our system prompt. Instructions contained inside code or comments cannot override bot controls.</li>
       </ul>
     </section>
 
     <!-- Section 2 -->
-    <section style="border-top: 1px solid var(--border-color); padding-top: 24px;">
-      <h2 style="color: var(--text-heading); font-size: 1.35rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+    <section style="border-top: 1px solid var(--border-subtle); padding-top: 28px;">
+      <h2 style="font-size: 1.3rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
         <span class="badge badge-success">2</span> Bring-Your-Own-Key (BYOK) Encryption
       </h2>
-      <p>
+      <p style="color: var(--text-secondary); line-height: 1.7;">
         GitPR operates on a Bring-Your-Own-Key model for Google Gemini. You provide your own free Gemini API key, ensuring you maintain complete control over your API quotas and access.
       </p>
-      <ul style="margin: 10px 0 10px 22px; color: var(--text-primary);">
-        <li><strong>AES-256-GCM Authenticated Encryption:</strong> Your API key is encrypted using AES-256-GCM with a unique, cryptographically random 96-bit initialization vector (IV) and an authentication tag.</li>
-        <li><strong>Isolated Master Key:</strong> The master encryption key is provided via the server's <code>ENCRYPTION_KEY</code> environment variable. It is never stored in the database or committed to source control.</li>
-        <li><strong>In-Memory Decryption Only:</strong> Keys are decrypted exclusively in-memory inside the background review worker for the single PR being reviewed, and are immediately discarded after the review comments are posted.</li>
-        <li><strong>Last 4 Characters Visible:</strong> Neither our UI nor our logs ever reveal your full API key. Only the last 4 characters (e.g. <code>•••• •••• •••• 1234</code>) are displayed for identification.</li>
-        <li><strong>Immediate Deletion:</strong> You can rotate or permanently delete your stored API key at any time from the <a href="/settings" style="color: var(--accent-blue);">Settings</a> page.</li>
+      <ul style="margin: 12px 0 12px 24px; color: var(--text-secondary); line-height: 1.8;">
+        <li><strong style="color: var(--text-primary);">AES-256-GCM Authenticated Encryption:</strong> Your API key is encrypted using AES-256-GCM with a unique, cryptographically random 96-bit initialization vector (IV) and an authentication tag.</li>
+        <li><strong style="color: var(--text-primary);">Isolated Master Key:</strong> The master encryption key is provided via the server's <code>ENCRYPTION_KEY</code> environment variable. It is never stored in the database or committed to source control.</li>
+        <li><strong style="color: var(--text-primary);">In-Memory Decryption Only:</strong> Keys are decrypted exclusively in-memory inside the background review worker for the single PR being reviewed, and are immediately discarded after the review comments are posted.</li>
+        <li><strong style="color: var(--text-primary);">Last 4 Characters Visible:</strong> Neither our UI nor our logs ever reveal your full API key. Only the last 4 characters (e.g. <code>•••• •••• •••• 1234</code>) are displayed for identification.</li>
+        <li><strong style="color: var(--text-primary);">Immediate Deletion:</strong> You can rotate or permanently delete your stored API key at any time from the <a href="/settings" style="color: #818cf8;">Settings</a> page.</li>
       </ul>
     </section>
 
     <!-- Section 3 -->
-    <section style="border-top: 1px solid var(--border-color); padding-top: 24px;">
-      <h2 style="color: var(--text-heading); font-size: 1.35rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+    <section style="border-top: 1px solid var(--border-subtle); padding-top: 28px;">
+      <h2 style="font-size: 1.3rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
         <span class="badge badge-info">3</span> Custom Style Guides & RAG Embeddings
       </h2>
-      <p>
+      <p style="color: var(--text-secondary); line-height: 1.7;">
         Teams can customize their code review guidelines using our Markdown editor.
       </p>
-      <ul style="margin: 10px 0 10px 22px; color: var(--text-primary);">
-        <li><strong>Vector Storage in pgvector:</strong> When you save your style guide, GitPR parses each rule section, generates 768-dimensional vector embeddings, and stores them in PostgreSQL with pgvector.</li>
-        <li><strong>Strict Multi-Tenant Isolation:</strong> Every vector similarity query strictly filters by <code>installation_id</code>. Your custom style guide rules are completely private to your GitHub account and can never be retrieved or viewed by other accounts.</li>
+      <ul style="margin: 12px 0 12px 24px; color: var(--text-secondary); line-height: 1.8;">
+        <li><strong style="color: var(--text-primary);">Vector Storage in pgvector:</strong> When you save your style guide, GitPR parses each rule section, generates 768-dimensional vector embeddings, and stores them in PostgreSQL with pgvector.</li>
+        <li><strong style="color: var(--text-primary);">Strict Multi-Tenant Isolation:</strong> Every vector similarity query strictly filters by <code>installation_id</code>. Your custom style guide rules are completely private to your GitHub account and can never be retrieved or viewed by other accounts.</li>
       </ul>
     </section>
 
     <!-- Section 4 -->
-    <section style="border-top: 1px solid var(--border-color); padding-top: 24px;">
-      <h2 style="color: var(--text-heading); font-size: 1.35rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+    <section style="border-top: 1px solid var(--border-subtle); padding-top: 28px;">
+      <h2 style="font-size: 1.3rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
         <span class="badge badge-warning">4</span> Complete Data Deletion on Uninstall
       </h2>
-      <p>
+      <p style="color: var(--text-secondary); line-height: 1.7;">
         You have complete control over your data. If you decide to uninstall GitPR from your GitHub account:
       </p>
-      <ul style="margin: 10px 0 10px 22px; color: var(--text-primary);">
+      <ul style="margin: 12px 0 12px 24px; color: var(--text-secondary); line-height: 1.8;">
         <li>GitHub sends an automated <code>installation.deleted</code> webhook to our server.</li>
         <li>GitPR immediately and permanently deletes the installation row from PostgreSQL.</li>
         <li>Through cascading database foreign keys (<code>ON DELETE CASCADE</code>), all associated records are permanently wiped:
@@ -82,14 +82,14 @@
     </section>
 
     <!-- Section 5 -->
-    <section style="border-top: 1px solid var(--border-color); padding-top: 24px;">
-      <h2 style="color: var(--text-heading); font-size: 1.35rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+    <section style="border-top: 1px solid var(--border-subtle); padding-top: 28px;">
+      <h2 style="font-size: 1.3rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
         <span class="badge badge-info">5</span> Web Security & Authorization
       </h2>
-      <ul style="margin: 10px 0 10px 22px; color: var(--text-primary);">
-        <li><strong>GitHub OAuth & Server-Side Sessions:</strong> Authentication is handled strictly via GitHub OAuth. Session cookies are stored server-side with <code>httpOnly</code>, <code>secure</code>, and <code>sameSite=lax</code> attributes.</li>
-        <li><strong>CSRF Protection:</strong> All state-changing endpoints (saving keys, deleting keys, updating style guides) require cryptographic CSRF token validation.</li>
-        <li><strong>Multi-Tenant Guard:</strong> The server verifies that the requested <code>installation_id</code> is present in the signed-in user's authorized installation list before serving settings or metrics. Requests with tampered installation IDs are rejected with <code>403 Forbidden</code>.</li>
+      <ul style="margin: 12px 0 12px 24px; color: var(--text-secondary); line-height: 1.8;">
+        <li><strong style="color: var(--text-primary);">GitHub OAuth & Server-Side Sessions:</strong> Authentication is handled strictly via GitHub OAuth. Session cookies are stored server-side with <code>httpOnly</code>, <code>secure</code>, and <code>sameSite=lax</code> attributes.</li>
+        <li><strong style="color: var(--text-primary);">CSRF Protection:</strong> All state-changing endpoints (saving keys, deleting keys, updating style guides) require cryptographic CSRF token validation.</li>
+        <li><strong style="color: var(--text-primary);">Multi-Tenant Guard:</strong> The server verifies that the requested <code>installation_id</code> is present in the signed-in user's authorized installation list before serving settings or metrics. Requests with tampered installation IDs are rejected with <code>403 Forbidden</code>.</li>
       </ul>
     </section>
   </div>

@@ -5,6 +5,7 @@ export interface SessionUser {
   id: number;
   login: string;
   avatarUrl?: string;
+  avatar_url?: string;
 }
 
 declare module "express-session" {
@@ -115,7 +116,12 @@ authRouter.get("/login", (req: Request, res: Response) => {
     redirectUri
   )}`;
 
-  res.redirect(authUrl);
+  req.session.save((err) => {
+    if (err) {
+      console.error("[ERROR] [AUTH] Failed to save session before redirect:", err);
+    }
+    res.redirect(authUrl);
+  });
 });
 
 // GET /auth/dev-login - Development mode instant sign-in
@@ -148,16 +154,37 @@ authRouter.get("/dev-login", async (req: Request, res: Response) => {
 
 // GET /auth/callback - Exchange OAuth code and record session
 authRouter.get("/callback", async (req: Request, res: Response) => {
-  const { code, state } = req.query;
+  const { code, state, installation_id, setup_action, error, error_description } = req.query;
 
-  // 1. Verify OAuth state to prevent CSRF login attacks
-  if (!state || state !== req.session.oauthState) {
-    res.status(403).send("Forbidden: Invalid OAuth state parameter.");
+  // Handle user cancellation or OAuth error from GitHub
+  if (error) {
+    console.warn(`[WARN] [AUTH] OAuth error from GitHub: ${error} - ${error_description}`);
+    res.redirect("/?error=" + encodeURIComponent(String(error_description || error)));
     return;
   }
-  delete req.session.oauthState;
+
+  // GitHub App installation callbacks supply installation_id and/or setup_action directly from GitHub's install flow
+  const isInstallation = Boolean(installation_id || setup_action);
+
+  // 1. Verify OAuth state to prevent CSRF login attacks
+  // Skip state verification ONLY when this is an installation callback directly from GitHub
+  if (!isInstallation) {
+    if (!state || !req.session?.oauthState || state !== req.session.oauthState) {
+      res.status(403).send("Forbidden: Invalid OAuth state parameter.");
+      return;
+    }
+  }
+
+  if (req.session?.oauthState) {
+    delete req.session.oauthState;
+  }
 
   if (!code) {
+    // If GitHub redirected here from an installation without OAuth code
+    if (installation_id) {
+      res.redirect(`/settings?installation_id=${encodeURIComponent(String(installation_id))}`);
+      return;
+    }
     res.status(400).send("Bad Request: Missing OAuth code from GitHub.");
     return;
   }
@@ -215,17 +242,30 @@ authRouter.get("/callback", async (req: Request, res: Response) => {
       ? instData.installations.map((i: any) => i.id)
       : [];
 
+    if (installation_id && !userInstallations.includes(Number(installation_id))) {
+      userInstallations.push(Number(installation_id));
+    }
+
     // 5. Store verified user and installation permissions in server session
     req.session.user = {
       id: userData.id,
       login: userData.login,
       avatarUrl: userData.avatar_url,
+      avatar_url: userData.avatar_url,
     };
     req.session.installations = userInstallations;
 
-    const destination = req.session.returnTo || "/settings";
+    const destination =
+      req.session.returnTo ||
+      (installation_id ? `/settings?installation_id=${encodeURIComponent(String(installation_id))}` : "/dashboard");
     delete req.session.returnTo;
-    res.redirect(destination);
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("[ERROR] Failed to save session during OAuth callback:", err);
+      }
+      res.redirect(destination);
+    });
   } catch (err: any) {
     console.error("[ERROR] [AUTH] OAuth callback exchange failed:", err?.message || err);
     res.status(500).send("Internal Server Error during authentication.");

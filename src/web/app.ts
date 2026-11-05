@@ -12,6 +12,9 @@ import { dashboardRouter } from "../dashboard/routes.js";
 export function createWebApp(probotApp?: Probot): Express {
   const app = express();
 
+  // Trust first proxy hop (Render, Cloudflare, AWS ALB) for secure cookies and https protocol detection
+  app.set("trust proxy", 1);
+
   // Dynamically resolve real GitHub App slug/URL directly from GitHub API
   let cachedInstallUrl: string | null = null;
   if (probotApp?.auth) {

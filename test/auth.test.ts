@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { ensureAuthenticated, ensureInstallationAccess } from "../src/web/auth.js";
+import express from "express";
+import { ensureAuthenticated, ensureInstallationAccess, authRouter } from "../src/web/auth.js";
 import { csrfProtection } from "../src/web/csrf.js";
 
 describe("Authentication & Multi-Tenant Authorization Security", () => {
@@ -154,6 +155,123 @@ describe("Authentication & Multi-Tenant Authorization Security", () => {
       });
 
       expect(nextCalled).toBe(true);
+    });
+  });
+
+  describe("OAuth Callback & Installation Handling", () => {
+    it("rejects OAuth callback when state parameter does not match session", async () => {
+      const app = express();
+      app.use((req: any, _res, next) => {
+        req.session = { oauthState: "expected-secret-state" };
+        next();
+      });
+      app.use("/auth", authRouter);
+
+      const result = await new Promise<{ status: number; body: string }>((resolve) => {
+        let status = 200;
+        let body = "";
+        const req: any = {
+          method: "GET",
+          url: "/auth/callback?code=some-code&state=wrong-state",
+          headers: {},
+        };
+        const res: any = {
+          status(code: number) {
+            status = code;
+            return this;
+          },
+          send(data: any) {
+            body = String(data);
+            resolve({ status, body });
+            return this;
+          },
+          setHeader() {
+            return this;
+          },
+        };
+        app.handle(req, res);
+      });
+
+      expect(result.status).toBe(403);
+      expect(result.body).toContain("Forbidden: Invalid OAuth state parameter.");
+    });
+
+    it("bypasses state check on GitHub App installation callback with installation_id", async () => {
+      const app = express();
+      app.use((req: any, _res, next) => {
+        req.session = {}; // No oauthState set!
+        next();
+      });
+      app.use("/auth", authRouter);
+
+      const result = await new Promise<{ status: number; location?: string }>((resolve) => {
+        let status = 200;
+        let location = "";
+        const req: any = {
+          method: "GET",
+          url: "/auth/callback?installation_id=12345",
+          headers: {},
+        };
+        const res: any = {
+          status(code: number) {
+            status = code;
+            return this;
+          },
+          redirect(url: string) {
+            status = 302;
+            location = url;
+            resolve({ status, location });
+          },
+          send(data: any) {
+            resolve({ status, location: String(data) });
+            return this;
+          },
+          setHeader() {
+            return this;
+          },
+        };
+        app.handle(req, res);
+      });
+
+      expect(result.status).toBe(302);
+      expect(result.location).toBe("/settings?installation_id=12345");
+    });
+
+    it("handles GitHub OAuth error by redirecting to home with error message", async () => {
+      const app = express();
+      app.use((req: any, _res, next) => {
+        req.session = {};
+        next();
+      });
+      app.use("/auth", authRouter);
+
+      const result = await new Promise<{ status: number; location: string }>((resolve) => {
+        let status = 200;
+        let location = "";
+        const req: any = {
+          method: "GET",
+          url: "/auth/callback?error=access_denied&error_description=User%20denied%20access",
+          headers: {},
+        };
+        const res: any = {
+          status(code: number) {
+            status = code;
+            return this;
+          },
+          redirect(url: string) {
+            status = 302;
+            location = url;
+            resolve({ status, location });
+          },
+          setHeader() {
+            return this;
+          },
+        };
+        app.handle(req, res);
+      });
+
+      expect(result.status).toBe(302);
+      expect(result.location).toContain("/?error=");
     });
   });
 });

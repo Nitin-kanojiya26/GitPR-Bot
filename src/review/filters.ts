@@ -93,23 +93,26 @@ export interface ExistingComment {
 
 /**
  * Filters out comments that have already been posted on this PR to prevent duplicate spam across commits.
+ * Outdated comments (where GitHub sets line to null after a line is edited in a new commit)
+ * are NOT treated as duplicates, allowing the bot to review new changes on previously flagged lines.
  */
 export function filterDuplicateComments<T extends { file: string; line: number }>(
     candidateComments: T[],
     existingComments: ExistingComment[]
 ): T[] {
-    const existingSet = new Set<string>();
+    const existingActiveLines = new Set<string>();
 
     for (const c of existingComments) {
-        const lineNum = c.line ?? c.original_line;
-        if (c.path && lineNum) {
+        // Only active (non-outdated) comments prevent duplicate postings.
+        // When a user edits a line in a subsequent commit, GitHub sets c.line = null (outdated).
+        if (c.path && c.line !== null && c.line !== undefined) {
             const normalizedPath = c.path.replace(/^\.?\//, "").trim();
-            existingSet.add(`${normalizedPath}:${lineNum}`);
+            existingActiveLines.add(`${normalizedPath}:${c.line}`);
         }
     }
 
     return candidateComments.filter((candidate) => {
         const normalizedFile = candidate.file.replace(/^\.?\//, "").trim();
-        return !existingSet.has(`${normalizedFile}:${candidate.line}`);
+        return !existingActiveLines.has(`${normalizedFile}:${candidate.line}`);
     });
 }

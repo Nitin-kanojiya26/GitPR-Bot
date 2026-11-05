@@ -117,20 +117,13 @@ flowchart TD
 ```
 GitPRBot/
 ├── db/
-│   ├── schema.sql            # PostgreSQL schema with pgvector extension & 768-D table
-│   └── seed.ts               # One-time idempotent style guide vector seeding script
+│   └── migrations/
+│       └── 001_initial_schema.sql  # Multi-tenant PostgreSQL schema with pgvector
 ├── docs/
-│   └── style-guide.md        # 10 production engineering rules enforced by the bot
+│   └── style-guide.md        # Default style guide rules enforced by the bot
 ├── evals/
-│   ├── cases.json            # 10 labeled test diffs for benchmarking retrieval
+│   ├── cases.json            # Labeled test diffs for benchmarking retrieval
 │   └── eval-rag.js           # RAG evaluation script measuring Hit Rate @ 3
-├── scripts/
-│   ├── test-health.js        # Deep healthcheck diagnostic probe
-│   ├── test-idempotency.js   # Live Redis atomic lock verification
-│   ├── test-llm.js           # Live Gemini connectivity probe
-│   ├── test-queue.js         # BullMQ queue & worker test
-│   ├── test-rag-review.js    # End-to-end RAG + Gemini review test
-│   └── test-rag.js           # Live vector similarity search verification
 ├── src/
 │   ├── index.ts              # Probot entrypoint & webhook router
 │   ├── health.ts             # Healthcheck service & HTTP handler (/healthz)

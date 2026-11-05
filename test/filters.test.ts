@@ -134,4 +134,20 @@ describe("filterDuplicateComments", () => {
         const filtered = filterDuplicateComments(candidates, existing);
         expect(filtered.length).toBe(0);
     });
+
+    it("allows commenting on a line if the previous comment became outdated (line is null)", () => {
+        const candidates = [
+            { file: "src/calc.js", line: 5, comment: "New bug in mul", severity: "high" as const },
+        ];
+
+        // An outdated comment on GitHub has line: null and original_line: 5
+        const existing = [
+            { path: "src/calc.js", line: null, original_line: 5 },
+        ];
+
+        const filtered = filterDuplicateComments(candidates, existing);
+        expect(filtered.length).toBe(1);
+        expect(filtered[0].file).toBe("src/calc.js");
+        expect(filtered[0].line).toBe(5);
+    });
 });

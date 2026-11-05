@@ -25,6 +25,8 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=builder /app/lib ./lib
 COPY docs/ ./docs/
 COPY db/ ./db/
+COPY views/ ./views/
+COPY public/ ./public/
 
 # Run as non-root user for container security
 USER node

@@ -47,3 +47,4 @@ Never use dynamic script execution.
     expect(parsed[29].title).toBe("Rule 30");
   });
 });
+

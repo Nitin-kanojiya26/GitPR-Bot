@@ -34,3 +34,4 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
   }
   return results;
 }
+

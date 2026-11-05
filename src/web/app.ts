@@ -1,21 +1,55 @@
 import express, { Express } from "express";
 import path from "node:path";
+import cookieParser from "cookie-parser";
+import session from "express-session";
 import { Probot } from "probot";
 import { checkHealth } from "../health.js";
+import { csrfProtection } from "./csrf.js";
+import { authRouter } from "./auth.js";
 
 export function createWebApp(probotApp?: Probot): Express {
   const app = express();
 
-  // Configure EJS view engine
+  // 1. Configure EJS view engine
   app.set("view engine", "ejs");
   app.set("views", path.join(process.cwd(), "views"));
 
-  // Serve static files from public/
+  // 2. Middleware pipeline
   app.use(express.static(path.join(process.cwd(), "public")));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  app.use(cookieParser());
 
-  // Healthcheck endpoint (/health and /healthz)
+  // 3. Server-side session configuration
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || "gitpr-dev-session-secret-change-in-prod",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      },
+    })
+  );
+
+  // 4. CSRF Protection for state-changing routes
+  app.use(csrfProtection);
+
+  // 5. Expose session user and app slug to all EJS templates
+  app.use((req, res, next) => {
+    res.locals.user = req.session?.user || null;
+    res.locals.installations = req.session?.installations || [];
+    res.locals.installUrl = `https://github.com/apps/${process.env.GITHUB_APP_SLUG || "gitpr-review-bot"}/installations/new`;
+    next();
+  });
+
+  // 6. Mount Authentication Router
+  app.use("/auth", authRouter);
+
+  // 7. Healthcheck endpoint (/health and /healthz)
   app.get(["/health", "/healthz"], async (_req, res) => {
     try {
       const health = await checkHealth();
@@ -31,15 +65,21 @@ export function createWebApp(probotApp?: Probot): Express {
     }
   });
 
-  // Landing page
+  // 8. Setup redirect target from GitHub App installation
+  app.get("/setup", (req, res) => {
+    if (!req.session?.user) {
+      res.redirect("/auth/login?returnTo=/setup");
+      return;
+    }
+    res.redirect("/settings");
+  });
+
+  // 9. Landing page
   app.get("/", (_req, res) => {
-    const appSlug = process.env.GITHUB_APP_SLUG || "gitpr-review-bot";
     res.render("index", {
       title: "GitPR - AI Pull Request Reviewer",
-      installUrl: `https://github.com/apps/${appSlug}/installations/new`,
     });
   });
 
   return app;
 }
-

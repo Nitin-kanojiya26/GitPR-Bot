@@ -154,3 +154,4 @@ export async function handleInstallationDeleted(installationId: number): Promise
   const result = await query("DELETE FROM installations WHERE installation_id = $1;", [installationId]);
   console.log(`[INFO] [INSTALLATION] Purged tenant #${installationId} (deleted rows: ${result.rowCount})`);
 }
+

@@ -6,6 +6,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
+    "migrate": "node ./lib/db/migrate.js",
     "start": "probot run ./lib/index.js",
     "test": "vitest run",
     "test:llm": "node scripts/test-llm.js",

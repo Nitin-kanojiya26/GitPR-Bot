@@ -5,6 +5,11 @@ import { ReviewJobData, QUEUE_NAME } from "./reviewQueue.js";
 import { reviewPullRequest } from "../review/reviewPR.js";
 import { acquireReviewLock } from "./idempotency.js";
 import {
+  isCommitAlreadyReviewed,
+  checkInstallationHourlyCap,
+} from "./delivery.js";
+import { recordReviewResult } from "../review/persistence.js";
+import {
   getDecryptedInstallationKey,
   hasPostedNoKeyWarning,
   recordNoKeyWarning,
@@ -38,6 +43,35 @@ export function createReviewWorker(app: Probot): Worker<ReviewJobData> {
           `[WARN] Skipping duplicate review for ${owner}/${repo}#${pullNumber} (${headSha.slice(0, 7)}) - already processed or in progress.`
         );
         return;
+      }
+
+      // 1. Commit SHA Idempotency: Avoid reviewing the same head_sha twice
+      const alreadyReviewed = await isCommitAlreadyReviewed(`${owner}/${repo}`, pullNumber, headSha);
+      if (alreadyReviewed) {
+        app.log.warn(
+          `[WARN] Commit ${headSha.slice(0, 7)} on ${owner}/${repo}#${pullNumber} was already reviewed. Skipping duplicate.`
+        );
+        return;
+      }
+
+      // 2. Per-installation hourly review cap (max 20 reviews/hour)
+      if (installationId) {
+        const { allowed, currentCount } = await checkInstallationHourlyCap(installationId);
+        if (!allowed) {
+          app.log.warn(
+            `[WARN] Installation #${installationId} exceeded hourly limit (${currentCount} reviews in last hour). Skipping review.`
+          );
+          await recordReviewResult({
+            installationId,
+            repo: `${owner}/${repo}`,
+            prNumber: pullNumber,
+            headSha,
+            status: "rate_limited",
+            commentsPosted: 0,
+            error: `Hourly review limit exceeded (${currentCount}/20 reviews in last hour).`,
+          });
+          return;
+        }
       }
 
       app.log.info(

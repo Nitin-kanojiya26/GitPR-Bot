@@ -87,7 +87,8 @@ CRITICAL INSTRUCTIONS:
 CODE DIFFS:
 ${diffsText}`;
 
-  for (let attempt = 1; attempt <= 2; attempt++) {
+  const MAX_ATTEMPTS = 3;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
       const response = await ai.models.generateContent({
         model: modelName,
@@ -104,11 +105,33 @@ ${diffsText}`;
       console.log(`[INFO] [Parsed Comments]: ${comments.length}`);
       return comments;
     } catch (error: any) {
-      console.error(`[ERROR] LLM review attempt ${attempt} failed:`, error?.message || error);
-      if (attempt === 1) {
-        console.log("[INFO] Waiting 2 seconds before retrying...");
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+      const status = Number(error?.status) || 0;
+      const msg = error?.message || String(error);
+      const isRateLimit =
+        status === 429 || msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED");
+      const isServerErr =
+        (status >= 500 && status < 600) || msg.includes("503") || msg.includes("UNAVAILABLE");
+
+      console.error(`[ERROR] LLM review attempt ${attempt} failed:`, msg);
+
+      if (attempt < MAX_ATTEMPTS && (isRateLimit || isServerErr)) {
+        // Exponential backoff with jitter: ~1s, ~2s
+        const delayMs = Math.pow(2, attempt - 1) * 1000 + Math.random() * 400;
+        console.log(
+          `[INFO] Retrying Gemini call in ${Math.round(delayMs)}ms (attempt ${attempt + 1}/${MAX_ATTEMPTS})...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        continue;
       }
+
+      if (isRateLimit) {
+        const rateLimitErr: any = new Error(`Gemini API rate limit exceeded: ${msg}`);
+        rateLimitErr.status = 429;
+        rateLimitErr.isRateLimit = true;
+        throw rateLimitErr;
+      }
+
+      throw error;
     }
   }
 

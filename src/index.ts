@@ -13,6 +13,7 @@ import {
   markThreadUnresolved,
   markUnresolvedCommentsIgnored,
 } from "./review/outcomes.js";
+import { recordWebhookDelivery, cleanOldWebhookDeliveries } from "./queue/delivery.js";
 
 interface AppOptions {
   addHandler?: (handler: (req: any, res: any) => Promise<boolean | void> | boolean | void) => void;
@@ -41,12 +42,22 @@ export default (app: Probot, options?: AppOptions) => {
     });
   }
 
-  // 2. Start the background review worker
+  // 2. Start the background review worker and clean old deliveries
   createReviewWorker(app);
+  cleanOldWebhookDeliveries().catch(() => null);
 
   app.on(
     ["pull_request.opened", "pull_request.synchronize", "pull_request.reopened"],
     async (context) => {
+      // 0. Webhook Idempotency: Deduplicate by X-GitHub-Delivery ID
+      const isNewDelivery = await recordWebhookDelivery(context.id);
+      if (!isNewDelivery) {
+        context.log.warn(
+          `[WARN] Skipping duplicate webhook delivery ${context.id} - already recorded.`
+        );
+        return;
+      }
+
       const pr = context.payload.pull_request;
 
       // 1. Ignore drafts and bot accounts

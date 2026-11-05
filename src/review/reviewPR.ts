@@ -7,6 +7,9 @@ import { recordReviewResult, determineRuleTitle } from "./persistence.js";
 
 export type OctokitInstance = Context["octokit"];
 
+export const MAX_FILES_PER_PR = 25;
+export const MAX_TOTAL_DIFF_CHARS = 100_000;
+
 export interface ReviewParams {
   owner: string;
   repo: string;
@@ -63,6 +66,13 @@ export async function reviewPullRequest(
     const commentableLinesMap = new Map<string, Set<number>>();
 
     for (const file of files) {
+      if (diffsToReview.length >= MAX_FILES_PER_PR) {
+        log.warn(
+          `[WARN] Reached maximum review cap of ${MAX_FILES_PER_PR} files for PR #${pullNumber}. Skipping remaining files.`
+        );
+        break;
+      }
+
       const filterResult = shouldReviewFile(file);
       if (!filterResult.review) {
         log.info(`Skipping file "${file.filename}": ${filterResult.reason}`);
@@ -96,6 +106,20 @@ export async function reviewPullRequest(
       return;
     }
 
+    // Cap total diff character payload to prevent token overflow
+    let totalDiffChars = 0;
+    const cappedDiffsToReview: typeof diffsToReview = [];
+    for (const d of diffsToReview) {
+      if (totalDiffChars + d.diff.length > MAX_TOTAL_DIFF_CHARS && cappedDiffsToReview.length > 0) {
+        log.warn(
+          `[WARN] Reached maximum diff payload cap (${MAX_TOTAL_DIFF_CHARS} chars). Capping review files for PR #${pullNumber}.`
+        );
+        break;
+      }
+      totalDiffChars += d.diff.length;
+      cappedDiffsToReview.push(d);
+    }
+
     // 3. Retrieve relevant team style rules via pgvector RAG
     const diffSummary = diffsToReview
       .map((d) => `${d.filename}\n${d.diff}`)
@@ -110,8 +134,8 @@ export async function reviewPullRequest(
     const rulesPrompt = formatRulesForPrompt(retrievedRules);
 
     // 4. Ask Gemini to review the code with style guide awareness
-    log.info(`Sending ${diffsToReview.length} file(s) to Gemini for review...`);
-    const rawAiComments = await generateReview(diffsToReview, rulesPrompt, customApiKey);
+    log.info(`Sending ${cappedDiffsToReview.length} file(s) to Gemini for review...`);
+    const rawAiComments = await generateReview(cappedDiffsToReview, rulesPrompt, customApiKey);
     log.info(`Gemini returned ${rawAiComments.length} suggestion(s).`);
 
     // 5. Hallucination Defense: Drop comments on lines outside the diff

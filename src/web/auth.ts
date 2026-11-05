@@ -67,7 +67,39 @@ authRouter.get("/login", (req: Request, res: Response) => {
       res.redirect(`/auth/dev-login?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
-    res.status(500).send("CLIENT_ID is not configured in server environment.");
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <title>OAuth Configuration Required - GitPR</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/css/style.css">
+      </head>
+      <body style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;">
+        <div class="card" style="max-width: 540px; width: 100%; padding: 32px;">
+          <h2 style="font-size: 18px; margin-bottom: 12px; color: #ef4444;">GitHub OAuth Setup Required</h2>
+          <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; margin-bottom: 20px;">
+            To log into your dashboard and settings in production, configure your GitHub App credentials on Render.
+          </p>
+          <div style="background-color: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; font-size: 12px; line-height: 1.8;">
+            <strong>Step-by-Step Instructions:</strong><br>
+            1. Open <a href="https://github.com/settings/apps" target="_blank" rel="noopener" style="color: #ffffff; text-decoration: underline;">GitHub Developer Settings &rarr; GitHub Apps</a>.<br>
+            2. Click your App (ID: <code>${process.env.APP_ID || "5567905"}</code>).<br>
+            3. Copy the <strong>Client ID</strong> and generate a <strong>Client Secret</strong>.<br>
+            4. In your Render Dashboard &rarr; <em>Environment</em>, add:<br>
+            &bull; <code>CLIENT_ID</code><br>
+            &bull; <code>CLIENT_SECRET</code><br>
+            &bull; <code>GITHUB_APP_SLUG</code> (the public name of your app)<br>
+            &bull; <code>BASE_URL=https://gitpr-bot.onrender.com</code>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <a href="/" class="btn btn-secondary btn-sm">&larr; Return Home</a>
+            <a href="https://github.com/settings/apps" target="_blank" rel="noopener" class="btn btn-primary btn-sm">GitHub App Settings &nearr;</a>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
     return;
   }
 

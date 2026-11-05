@@ -1,16 +1,15 @@
 <%- include('partials/header') %>
 
-<div class="container dashboard-page">
+<div class="container" style="padding-bottom: 40px;">
   <div class="page-header">
     <div>
       <h1>Code Review Analytics</h1>
-      <p class="subtitle">Real-time telemetry on style violations, resolution rates, and team review velocity.</p>
+      <p class="subtitle">Review metrics, style violations, and resolution rates.</p>
     </div>
     <% if (installations && installations.length > 0) { %>
       <div class="installation-selector">
-        <label for="dashboard-inst-select" style="font-size: 0.8rem; color: var(--text-muted); margin-right: 6px;">Filter Account:</label>
         <select id="dashboard-inst-select" onchange="window.location.href='/dashboard' + (this.value ? '?installation_id=' + this.value : '')">
-          <option value="" <%= !selectedInstallationId ? 'selected' : '' %>>All Connected Accounts</option>
+          <option value="" <%= !selectedInstallationId ? 'selected' : '' %>>All Accounts</option>
           <% installations.forEach(function(inst) { %>
             <option value="<%= inst.installation_id %>" <%= inst.installation_id == selectedInstallationId ? 'selected' : '' %>>
               <%= inst.account_login %> (#<%= inst.installation_id %>)
@@ -28,70 +27,66 @@
   <% } %>
 
   <% if (noInstallations) { %>
-    <div class="card empty-card">
-      <h2>No Installed Repositories Found</h2>
-      <p>Install GitPR on your GitHub repository to view review analytics and metrics.</p>
-      <div style="margin-top: 20px;">
-        <a href="<%= installUrl %>" class="btn btn-primary" target="_blank" rel="noopener">Install GitPR on GitHub</a>
+    <div class="card" style="text-align: center; padding: 40px 20px;">
+      <h2>No Repositories Found</h2>
+      <p style="color: var(--text-muted); margin-top: 6px;">Install GitPR on your GitHub repository to view review metrics.</p>
+      <div style="margin-top: 16px;">
+        <a href="<%= installUrl %>" class="btn btn-primary" target="_blank" rel="noopener">Install on GitHub</a>
       </div>
     </div>
   <% } else { %>
 
-    <!-- KPI Overview Ribbon -->
+    <!-- KPI Summary Row -->
     <div class="metrics-ribbon">
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-title">Total Reviews</span>
-          <span class="badge badge-info">30d</span>
+          <span class="stat-title">Reviews</span>
         </div>
         <div class="stat-val"><%= (data.recentReviews && data.recentReviews.length) || 0 %></div>
-        <div class="stat-desc">Pull requests reviewed</div>
+        <div class="stat-desc">Past 30 days</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-title">Comments Posted</span>
-          <span class="badge badge-secondary">12w</span>
+          <span class="stat-title">Comments</span>
         </div>
         <div class="stat-val">
           <%= (data.commentsPerWeek && data.commentsPerWeek.reduce((acc, c) => acc + Number(c.count), 0)) || 0 %>
         </div>
-        <div class="stat-desc">Inline review suggestions</div>
+        <div class="stat-desc">Review suggestions</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-header">
           <span class="stat-title">Fix Rate</span>
-          <span class="badge badge-success">Target > 70%</span>
         </div>
-        <div class="stat-val text-success">
+        <div class="stat-val">
           <%= (data.outcomeRates && data.outcomeRates.fixed_pct !== null) ? data.outcomeRates.fixed_pct + '%' : 'N/A' %>
         </div>
-        <div class="stat-desc">Heuristically verified fixes</div>
+        <div class="stat-desc">Threads resolved</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-title">Top Violated Rule</span>
-          <span class="badge badge-warning">High Impact</span>
+          <span class="stat-title">Top Rule</span>
         </div>
-        <div class="stat-val" style="font-size: 1.15rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+        <div class="stat-val" style="font-size: 1rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
           <%= (data.topRules && data.topRules[0]) ? data.topRules[0].rule_title : 'None' %>
         </div>
         <div class="stat-desc">
-          <%= (data.topRules && data.topRules[0]) ? data.topRules[0].count + ' citations' : 'Clean code records' %>
+          <%= (data.topRules && data.topRules[0]) ? data.topRules[0].count + ' citations' : 'No violations' %>
         </div>
       </div>
     </div>
 
-    <!-- Top 3 Panels: Metrics & Charts -->
+    <!-- 3 Panels: Metrics & Charts -->
     <div class="dashboard-grid">
       <!-- Panel 1: Comments per Week -->
       <div class="card chart-card">
         <div class="card-header">
           <div>
             <h2>Comments Per Week</h2>
-            <p class="card-subtitle">Volume of review recommendations posted (last 12 weeks)</p>
+            <p class="card-subtitle">Weekly review comments (last 12 weeks)</p>
           </div>
         </div>
         <div class="card-body">
@@ -101,11 +96,7 @@
             </div>
           <% } else { %>
             <div class="chart-empty-state">
-              <svg width="40" height="40" viewBox="0 0 16 16" fill="currentColor" class="empty-icon">
-                <path d="M1.5 1.75a.75.75 0 00-1.5 0v12.5c0 .414.336.75.75.75h14.5a.75.75 0 000-1.5H1.5V1.75zM15.28 5.22a.75.75 0 00-1.06 0L9.5 9.94 6.78 7.22a.75.75 0 00-1.06 0l-3.5 3.5a.75.75 0 101.06 1.06L6.25 8.81l2.72 2.72a.75.75 0 001.06 0l5.25-5.25a.75.75 0 000-1.06z"></path>
-              </svg>
               <p>No comments recorded in the last 12 weeks.</p>
-              <span class="text-muted">Review comments will appear here as PRs are reviewed.</span>
             </div>
           <% } %>
         </div>
@@ -116,7 +107,7 @@
         <div class="card-header">
           <div>
             <h2>Top 5 Rules Triggered</h2>
-            <p class="card-subtitle">Most frequently cited team style guidelines</p>
+            <p class="card-subtitle">Most cited guidelines</p>
           </div>
         </div>
         <div class="card-body">
@@ -126,11 +117,7 @@
             </div>
           <% } else { %>
             <div class="chart-empty-state">
-              <svg width="40" height="40" viewBox="0 0 16 16" fill="currentColor" class="empty-icon">
-                <path d="M3 2.75C3 1.784 3.784 1 4.75 1h6.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0111.25 15h-6.5A1.75 1.75 0 013 13.25V2.75zm1.75-.25a.25.25 0 00-.25.25v10.5c0 .138.112.25.25.25h6.5a.25.25 0 00.25-.25V2.75a.25.25 0 00-.25-.25h-6.5z"></path>
-              </svg>
               <p>No rules triggered yet.</p>
-              <span class="text-muted">Violation frequencies will chart here as reviews are posted.</span>
             </div>
           <% } %>
         </div>
@@ -140,50 +127,49 @@
       <div class="card chart-card">
         <div class="card-header">
           <div>
-            <h2>Fixed vs Ignored Rate</h2>
-            <p class="card-subtitle">Heuristic outcome rate across all decided review comments</p>
+            <h2>Outcome Rate</h2>
+            <p class="card-subtitle">Resolved vs unaddressed comments</p>
           </div>
         </div>
         <div class="card-body">
           <div class="rates-summary">
             <div class="rate-stat">
-              <span class="stat-number text-success"><%= data.outcomeRates.fixed_pct !== null ? data.outcomeRates.fixed_pct + '%' : 'N/A' %></span>
+              <span class="stat-number"><%= data.outcomeRates.fixed_pct !== null ? data.outcomeRates.fixed_pct + '%' : 'N/A' %></span>
               <span class="stat-label">Fixed (<%= data.outcomeRates.fixed_count %>)</span>
             </div>
             <div class="rate-stat">
-              <span class="stat-number text-danger"><%= data.outcomeRates.ignored_pct !== null ? data.outcomeRates.ignored_pct + '%' : 'N/A' %></span>
+              <span class="stat-number" style="color: var(--text-muted);"><%= data.outcomeRates.ignored_pct !== null ? data.outcomeRates.ignored_pct + '%' : 'N/A' %></span>
               <span class="stat-label">Ignored (<%= data.outcomeRates.ignored_count %>)</span>
             </div>
             <div class="rate-stat">
-              <span class="stat-number text-warning"><%= data.outcomeRates.open_count %></span>
+              <span class="stat-number" style="color: var(--text-dim);"><%= data.outcomeRates.open_count %></span>
               <span class="stat-label">Open</span>
             </div>
           </div>
 
           <% if (data.outcomeRates.fixed_count > 0 || data.outcomeRates.ignored_count > 0 || data.outcomeRates.open_count > 0) { %>
-            <div class="chart-container" style="height: 160px;">
+            <div class="chart-container" style="height: 140px;">
               <canvas id="outcomeChart"></canvas>
             </div>
           <% } else { %>
             <div class="chart-empty-state" style="padding: 10px 0;">
-              <p>No comment outcomes decided yet.</p>
+              <p>No outcomes decided yet.</p>
             </div>
           <% } %>
 
           <p class="heuristic-note">
-            &bull; <strong>Fixed:</strong> PR author resolved thread.<br>
-            &bull; <strong>Ignored:</strong> PR merged or closed with unaddressed comments.
+            Fixed: PR author resolved comment &bull; Ignored: PR merged or closed with open comment.
           </p>
         </div>
       </div>
     </div>
 
     <!-- Panel 4: Recent 20 Reviews Audit Table -->
-    <div class="card" style="margin-top: 28px;">
+    <div class="card" style="margin-top: 16px;">
       <div class="card-header">
         <div>
-          <h2>Recent Reviews Audit Log</h2>
-          <p class="card-subtitle">Detailed execution trace of the last 20 automated reviews</p>
+          <h2>Recent Reviews</h2>
+          <p class="card-subtitle">Last 20 automated reviews</p>
         </div>
       </div>
 
@@ -193,9 +179,9 @@
             <tr>
               <th>Date</th>
               <th>Repository</th>
-              <th>PR #</th>
+              <th>PR</th>
               <th>Commit</th>
-              <th>Comments</th>
+              <th>Issues</th>
               <th>Latency</th>
               <th>Status</th>
             </tr>
@@ -204,33 +190,29 @@
             <% if (data.recentReviews && data.recentReviews.length > 0) { %>
               <% data.recentReviews.forEach(function(r) { %>
                 <tr>
-                  <td style="color: var(--text-secondary); white-space: nowrap;">
+                  <td style="color: var(--text-dim); white-space: nowrap;">
                     <%= new Date(r.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
                   </td>
-                  <td>
-                    <span style="font-weight: 600; color: var(--text-primary);"><%= r.repo %></span>
-                  </td>
+                  <td><%= r.repo %></td>
                   <td>
                     <a href="https://github.com/<%= r.repo %>/pull/<%= r.pr_number %>" target="_blank" rel="noopener">
-                      #<%= r.pr_number %> &nearr;
+                      #<%= r.pr_number %>
                     </a>
                   </td>
                   <td>
                     <span class="sha-pill"><%= r.head_sha ? r.head_sha.substring(0, 7) : 'head' %></span>
                   </td>
                   <td>
-                    <span class="badge <%= r.comments_posted > 0 ? 'badge-info' : 'badge-secondary' %>">
-                      <%= r.comments_posted %> <%= r.comments_posted === 1 ? 'issue' : 'issues' %>
-                    </span>
+                    <span class="badge badge-secondary"><%= r.comments_posted %></span>
                   </td>
-                  <td style="color: var(--text-secondary);">
+                  <td style="color: var(--text-muted);">
                     <%= r.duration_ms ? (r.duration_ms / 1000).toFixed(1) + 's' : '-' %>
                   </td>
                   <td>
                     <% if (r.status === 'completed') { %>
-                      <span class="badge badge-success">Completed</span>
+                      <span class="badge badge-success">completed</span>
                     <% } else if (r.status === 'failed') { %>
-                      <span class="badge badge-danger">Failed</span>
+                      <span class="badge badge-danger">failed</span>
                     <% } else { %>
                       <span class="badge badge-warning"><%= r.status %></span>
                     <% } %>
@@ -239,8 +221,8 @@
               <% }); %>
             <% } else { %>
               <tr>
-                <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">
-                  No reviews recorded yet. Reviews will log here automatically when pull requests are created.
+                <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-dim);">
+                  No reviews recorded yet.
                 </td>
               </tr>
             <% } %>
@@ -251,17 +233,15 @@
   <% } %>
 </div>
 
-<!-- Chart.js Engine -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const rawData = <%- JSON.stringify(data) %>;
 
-    // Global Chart.js Font Styling
-    Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Inter", sans-serif';
-    Chart.defaults.color = "#94a3b8";
+    Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    Chart.defaults.color = "#888888";
 
-    // 1. Comments per Week Line Chart
+    // 1. Comments per Week Line Chart (Monochrome clean white line)
     const weeklyCanvas = document.getElementById("commentsPerWeekChart");
     if (weeklyCanvas && rawData.commentsPerWeek && rawData.commentsPerWeek.length > 0) {
       new Chart(weeklyCanvas, {
@@ -269,51 +249,29 @@
         data: {
           labels: rawData.commentsPerWeek.map(d => d.week),
           datasets: [{
-            label: "Comments Posted",
+            label: "Comments",
             data: rawData.commentsPerWeek.map(d => d.count),
-            borderColor: "#6366f1",
-            backgroundColor: "rgba(99, 102, 241, 0.12)",
-            borderWidth: 2.5,
-            tension: 0.35,
-            fill: true,
-            pointBackgroundColor: "#818cf8",
-            pointBorderColor: "#ffffff",
-            pointBorderWidth: 1.5,
-            pointRadius: 4,
-            pointHoverRadius: 6,
+            borderColor: "#e5e5e5",
+            borderWidth: 1.5,
+            tension: 0.1,
+            fill: false,
+            pointBackgroundColor: "#ffffff",
+            pointRadius: 3,
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: "rgba(15, 18, 27, 0.95)",
-              titleColor: "#ffffff",
-              bodyColor: "#cbd5e1",
-              borderColor: "rgba(255, 255, 255, 0.1)",
-              borderWidth: 1,
-              padding: 10,
-              cornerRadius: 8
-            }
-          },
+          plugins: { legend: { display: false } },
           scales: {
-            x: {
-              grid: { color: "rgba(255, 255, 255, 0.04)" },
-              ticks: { color: "#64748b" }
-            },
-            y: {
-              beginAtZero: true,
-              grid: { color: "rgba(255, 255, 255, 0.04)" },
-              ticks: { color: "#64748b", precision: 0 }
-            }
+            x: { grid: { color: "#1c1c1c" }, ticks: { color: "#666666" } },
+            y: { beginAtZero: true, grid: { color: "#1c1c1c" }, ticks: { color: "#666666", precision: 0 } }
           }
         }
       });
     }
 
-    // 2. Top 5 Rules Bar Chart
+    // 2. Top 5 Rules Bar Chart (Monochrome gray bars)
     const topRulesCanvas = document.getElementById("topRulesChart");
     if (topRulesCanvas && rawData.topRules && rawData.topRules.length > 0) {
       new Chart(topRulesCanvas, {
@@ -321,12 +279,10 @@
         data: {
           labels: rawData.topRules.map(r => r.rule_title.length > 25 ? r.rule_title.slice(0, 22) + "..." : r.rule_title),
           datasets: [{
-            label: "Violations",
             data: rawData.topRules.map(r => r.count),
-            backgroundColor: "rgba(139, 92, 246, 0.8)",
-            borderColor: "#8b5cf6",
-            borderWidth: 1,
-            borderRadius: 6,
+            backgroundColor: "#333333",
+            hoverBackgroundColor: "#555555",
+            borderRadius: 3,
           }]
         },
         options: {
@@ -335,13 +291,6 @@
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: "rgba(15, 18, 27, 0.95)",
-              titleColor: "#ffffff",
-              bodyColor: "#cbd5e1",
-              borderColor: "rgba(255, 255, 255, 0.1)",
-              borderWidth: 1,
-              padding: 10,
-              cornerRadius: 8,
               callbacks: {
                 title: function(items) {
                   const idx = items[0].dataIndex;
@@ -351,21 +300,14 @@
             }
           },
           scales: {
-            x: {
-              grid: { display: false },
-              ticks: { color: "#64748b", font: { size: 11 } }
-            },
-            y: {
-              beginAtZero: true,
-              grid: { color: "rgba(255, 255, 255, 0.04)" },
-              ticks: { color: "#64748b", precision: 0 }
-            }
+            x: { grid: { display: false }, ticks: { color: "#666666", font: { size: 10 } } },
+            y: { beginAtZero: true, grid: { color: "#1c1c1c" }, ticks: { color: "#666666", precision: 0 } }
           }
         }
       });
     }
 
-    // 3. Outcome Breakdown Doughnut Chart
+    // 3. Outcome Breakdown Doughnut Chart (Minimal Monochrome)
     const outcomeCanvas = document.getElementById("outcomeChart");
     if (outcomeCanvas && (rawData.outcomeRates.fixed_count > 0 || rawData.outcomeRates.ignored_count > 0 || rawData.outcomeRates.open_count > 0)) {
       new Chart(outcomeCanvas, {
@@ -378,10 +320,9 @@
               rawData.outcomeRates.ignored_count,
               rawData.outcomeRates.open_count
             ],
-            backgroundColor: ["#10b981", "#f43f5e", "#f59e0b"],
-            borderColor: "#0f121b",
-            borderWidth: 3,
-            hoverOffset: 4
+            backgroundColor: ["#ffffff", "#555555", "#222222"],
+            borderColor: "#121212",
+            borderWidth: 2,
           }]
         },
         options: {
@@ -390,16 +331,7 @@
           plugins: {
             legend: {
               position: "bottom",
-              labels: { color: "#94a3b8", font: { size: 11 }, padding: 12 }
-            },
-            tooltip: {
-              backgroundColor: "rgba(15, 18, 27, 0.95)",
-              titleColor: "#ffffff",
-              bodyColor: "#cbd5e1",
-              borderColor: "rgba(255, 255, 255, 0.1)",
-              borderWidth: 1,
-              padding: 10,
-              cornerRadius: 8
+              labels: { color: "#888888", font: { size: 10 }, boxWidth: 10 }
             }
           }
         }

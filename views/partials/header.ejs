@@ -3,22 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= typeof title !== 'undefined' ? title : 'GitPR - AI Pull Request Reviewer' %></title>
+  <title><%= typeof title !== 'undefined' ? title : 'GitPR - Code Reviewer' %></title>
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
 <body>
   <nav class="navbar">
     <div class="container">
       <a href="/" class="brand">
-        <div class="brand-icon-wrapper">
-          <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v7a1 1 0 01-1 1h-1v1.5h1a2.5 2.5 0 002.5-2.5V5A2.5 2.5 0 0011 2.5z"></path>
-          </svg>
-        </div>
-        <span class="brand-text">GitPR</span>
-        <span class="brand-version">v2.0</span>
+        <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v7a1 1 0 01-1 1h-1v1.5h1a2.5 2.5 0 002.5-2.5V5A2.5 2.5 0 0011 2.5z"></path>
+        </svg>
+        <span>GitPR</span>
       </a>
       <div class="nav-links">
         <a href="/" class="nav-item">Home</a>
@@ -37,7 +32,7 @@
         <% } else { %>
           <a href="/auth/login" class="btn btn-secondary btn-sm">Sign In</a>
         <% } %>
-        <a href="<%= installUrl %>" class="btn btn-primary btn-sm" target="_blank" rel="noopener">Install App</a>
+        <a href="<%= installUrl %>" class="btn btn-primary btn-sm" target="_blank" rel="noopener">Install on GitHub</a>
       </div>
     </div>
   </nav>

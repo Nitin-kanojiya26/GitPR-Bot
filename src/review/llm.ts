@@ -4,7 +4,7 @@ import { z } from "zod";
 export const CommentSchema = z.object({
   file: z.string(),
   line: z.number().int().positive(),
-  severity: z.enum(["low", "medium", "high"]),
+  severity: z.enum(["low", "medium", "high", "critical"]),
   comment: z.string().min(1).max(600),
 });
 
@@ -80,7 +80,7 @@ CRITICAL INSTRUCTIONS:
 4. Be constructive, concise, and specific.
 5. Return at most 8 comments. If the code has no bugs, return: {"comments": []}.
 6. Return JSON ONLY matching this schema:
-   {"comments": [{"file": string, "line": number, "severity": "low"|"medium"|"high", "comment": string}]}
+   {"comments": [{"file": string, "line": number, "severity": "low"|"medium"|"high"|"critical", "comment": string}]}
 
 CODE DIFFS:
 ${diffsText}`;

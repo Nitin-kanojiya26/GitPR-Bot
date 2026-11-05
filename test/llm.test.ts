@@ -26,6 +26,23 @@ describe("LLM review validation", () => {
     expect(comments[0].severity).toBe("high");
   });
 
+  it("accepts critical severity for security vulnerabilities", () => {
+    const criticalJson = JSON.stringify({
+      comments: [
+        {
+          file: "calc.js",
+          line: 15,
+          severity: "critical",
+          comment: "Hardcoded API key detected.",
+        },
+      ],
+    });
+
+    const comments = parseAndValidateReview(criticalJson);
+    expect(comments).toHaveLength(1);
+    expect(comments[0].severity).toBe("critical");
+  });
+
   it("returns empty array on malformed JSON without crashing", () => {
     const badJson = '{"comments": [ broken json...';
     expect(parseAndValidateReview(badJson)).toEqual([]);
@@ -51,7 +68,7 @@ describe("LLM review validation", () => {
         {
           file: "calc.js",
           line: 10,
-          severity: "super-critical", // Not low, medium, or high
+          severity: "super-critical", // Not low, medium, high, or critical
           comment: "Bad severity",
         },
       ],

@@ -367,7 +367,7 @@ describe("Strict Multi-Tenant Isolation & Security Audit", () => {
       });
 
       expect(result.status).toBe(200);
-      expect(result.body).toContain("GitPR Privacy Policy");
+      expect(result.body).toContain("Vigilentia Privacy Policy");
       expect(result.body).toContain("Ephemeral Diff Transmission");
       expect(result.body).toContain("Bring-Your-Own-Key");
       expect(result.body).toContain("Complete Data Deletion on Uninstall");

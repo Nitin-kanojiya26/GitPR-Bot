@@ -1,8 +1,8 @@
-# GitPR-Bot: Autonomous AI Pull Request Reviewer
+# Vigilentia: Autonomous AI Pull Request Reviewer
 
 <div align="center">
 
-[![Install App](https://img.shields.io/badge/GitHub_App-Install_GitPR-2ea44f?style=for-the-badge&logo=github)](https://github.com/apps/gitpr-bot)
+[![Install App](https://img.shields.io/badge/GitHub_App-Install_Vigilentia-2ea44f?style=for-the-badge&logo=github)](https://github.com/apps/gitpr-bot)
 
 ### [🚀 Open Live Dashboard & Settings](https://gitpr-bot.onrender.com) &bull; [📦 Install on Your GitHub Repositories](https://github.com/apps/gitpr-bot)
 
@@ -17,7 +17,7 @@ Code reviews are one of the biggest bottlenecks in modern engineering teams:
 - **Style Guide Decay:** Teams write comprehensive 20-page engineering guidelines that get forgotten because nobody memorizes every rule.
 - **Generic AI Bots Fail:** Typical AI review bots hallucinate invalid line numbers (triggering GitHub HTTP 422 errors), lack knowledge of company-specific guidelines, or timeout on GitHub's strict 10-second webhook limit.
 
-**GitPR-Bot** is engineered from the ground up to solve these problems without heavy, black-box AI frameworks. Every line of parsing, embedding, retrieval, queuing, and posting is modular, transparent, and strictly validated.
+**Vigilentia** is engineered from the ground up to solve these problems without heavy, black-box AI frameworks. Every line of parsing, embedding, retrieval, queuing, and posting is modular, transparent, and strictly validated.
 
 ---
 
@@ -115,7 +115,7 @@ flowchart TD
 ## Directory Structure
 
 ```
-GitPRBot/
+vigilentia/
 ├── db/
 │   └── migrations/
 │       └── 001_initial_schema.sql  # Multi-tenant PostgreSQL schema with pgvector
@@ -138,13 +138,7 @@ GitPRBot/
 │       ├── llm.ts            # Swappable Gemini client, Zod schemas, auto-retry
 │       ├── rag.ts            # pgvector semantic rule retriever
 │       └── reviewPR.ts       # Main review orchestrator
-├── test/                     # Vitest unit test suites
-│   ├── diff.test.ts
-│   ├── filters.test.ts
-│   ├── health.test.ts
-│   ├── idempotency.test.ts
-│   ├── llm.test.ts
-│   └── rag.test.ts
+├── test/                     # 126 automated Vitest test suites
 ├── .dockerignore             # Protects credentials and secrets from Docker builds
 ├── docker-compose.yml        # Orchestration for bot, postgres-pgvector, and redis
 ├── Dockerfile                # Multi-stage production container build
@@ -167,8 +161,8 @@ GitPRBot/
 ### Step 1: Clone & Install Dependencies
 
 ```bash
-git clone https://github.com/Nitin-kanojiya26/GitPR-Bot.git
-cd GitPR-Bot
+git clone https://github.com/Nitin-kanojiya26/vigilentia.git
+cd vigilentia
 npm install
 ```
 
@@ -272,28 +266,13 @@ curl http://localhost:3000/healthz
 
 ## Verification & Testing Suite
 
-GitPR-Bot includes a complete testing and diagnostic suite:
+Vigilentia includes 126 automated unit and integration tests:
 
 ```bash
-# 1. Run all 25 unit tests (Filters, Diff, LLM, RAG, Idempotency, Health)
+# Run all 126 unit & integration tests (Filters, Diff, LLM, RAG, Idempotency, Health, Auth)
 npm test
 
-# 2. Probe live /healthz endpoint (Postgres & Redis latency check)
-npm run test:health
-
-# 3. Test Redis queue job producer & consumer
-npm run test:queue
-
-# 4. Verify atomic lock idempotency (blocks duplicate events)
-npm run test:idempotency
-
-# 5. Test live semantic vector search from PostgreSQL
-npm run test:rag
-
-# 6. Test live RAG + Gemini review generation with rule citations
-npm run test:rag-review
-
-# 7. Run the ML retrieval evaluation benchmark (Hit Rate @ 3)
+# Run the ML retrieval evaluation benchmark (Hit Rate @ 3)
 npm run eval:rag
 ```
 
@@ -334,7 +313,7 @@ ID | Result | Rank | Expected Rule
 Built step-by-step as an engineering deep-dive into AI infrastructure, vector databases, and asynchronous distributed systems.
 
 - **Author:** [Nitin Kanojiya](https://github.com/Nitin-kanojiya26)
-- **Repository:** [GitPR-Bot](https://github.com/Nitin-kanojiya26/GitPR-Bot.git)
+- **Repository:** [vigilentia](https://github.com/Nitin-kanojiya26/vigilentia.git)
 
 ---
 

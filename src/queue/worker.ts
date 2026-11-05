@@ -114,7 +114,7 @@ export function createReviewWorker(app: Probot): Worker<ReviewJobData> {
               owner,
               repo,
               issue_number: pullNumber,
-              body: `🤖 **GitPR Setup Required**\n\nTo enable automated AI code reviews for pull requests, please configure your free Google Gemini API key at:\n👉 [**Configure GitPR Settings**](${setupUrl})\n\n*GitPR stores your key encrypted with AES-256-GCM and decrypts it only in-memory during review processing.*`,
+              body: `🤖 **Vigilentia Setup Required**\n\nTo enable automated AI code reviews for pull requests, please configure your free Google Gemini API key at:\n👉 [**Configure Vigilentia Settings**](${setupUrl})\n\n*Vigilentia stores your key encrypted with AES-256-GCM and decrypts it only in-memory during review processing.*`,
             });
             await recordNoKeyWarning(installationId || 0, repoFullName, pullNumber);
           } catch (err: any) {

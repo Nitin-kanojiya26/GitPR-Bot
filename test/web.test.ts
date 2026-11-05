@@ -73,7 +73,7 @@ describe("Unified Web Application", () => {
     });
 
     expect(result.status).toBe(200);
-    expect(result.body).toContain("GitPR");
+    expect(result.body).toContain("Vigilentia");
     expect(result.body).toContain("Install on GitHub");
     expect(result.body).toContain("Zero Installation Required");
   });

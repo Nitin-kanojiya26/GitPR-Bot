@@ -113,14 +113,14 @@ export function createWebApp(probotApp?: Probot): Express {
   // 9. Landing page
   app.get("/", (_req, res) => {
     res.render("index", {
-      title: "GitPR - AI Pull Request Reviewer",
+      title: "Vigilentia - Autonomous AI Pull Request Reviewer",
     });
   });
 
   // 10. Privacy policy page
   app.get("/privacy", (_req, res) => {
     res.render("privacy", {
-      title: "Privacy Policy - GitPR",
+      title: "Privacy Policy - Vigilentia",
     });
   });
 

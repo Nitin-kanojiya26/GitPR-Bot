@@ -20,7 +20,7 @@ interface AppOptions {
   [key: string]: unknown;
 }
 
-export default (app: Probot, options?: AppOptions) => {
+const gitPrApp = (app: Probot, options?: AppOptions) => {
   // 1. Mount unified Express web application (Landing, Dashboard, Settings, Health)
   if (options?.addHandler) {
     const webApp = createWebApp(app);
@@ -194,3 +194,22 @@ export default (app: Probot, options?: AppOptions) => {
     context.log.info(`[SUCCESS] Reverted ${updated} comment(s) back to 'open' on ${repoFullName}`);
   });
 };
+
+export default gitPrApp;
+
+// Auto-start server if invoked directly with `node lib/index.js` (Render's default command)
+const isDirectRun =
+  process.argv[1] &&
+  (process.argv[1].endsWith("index.js") || process.argv[1].endsWith("index.ts"));
+
+if (isDirectRun) {
+  import("probot").then(({ run }) => {
+    run(gitPrApp, {
+      env: {
+        ...process.env,
+        HOST: process.env.HOST || "0.0.0.0",
+        PORT: process.env.PORT || "10000",
+      },
+    });
+  });
+}

@@ -71,6 +71,14 @@ export async function syncInstallationRules(
   try {
     await client.query("BEGIN;");
 
+    // Ensure installation exists in installations table to prevent foreign key violation
+    await client.query(
+      `INSERT INTO installations (installation_id, account_login, account_type)
+       VALUES ($1, $2, 'User')
+       ON CONFLICT (installation_id) DO NOTHING;`,
+      [installationId, `Installation #${installationId}`]
+    );
+
     // 1. Delete existing rules for this installation
     await client.query("DELETE FROM rules WHERE installation_id = $1;", [installationId]);
 

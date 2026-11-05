@@ -118,7 +118,7 @@
           <% } else if (settings.index_status === 'failed') { %>
             <span class="badge badge-danger">Failed</span>
           <% } else { %>
-            <span class="badge badge-secondary"><%= settings.index_status || 'Pending' %> (v<%= settings.guide_version %>)</span>
+            <span class="badge badge-secondary"><%= settings.index_status === 'not_configured' ? 'Not Configured' : (settings.index_status || 'Pending') %> (v<%= settings.guide_version %>)</span>
           <% } %>
         </div>
 
@@ -132,7 +132,8 @@
                 name="guide_md"
                 id="guide_md"
                 class="form-control code-editor"
-                rows="16"
+                rows="24"
+                style="min-height: 480px;"
                 maxlength="20000"
                 placeholder="# Team Style Guide&#10;&#10;## 1. Rule Title&#10;Explanation..."
                 required

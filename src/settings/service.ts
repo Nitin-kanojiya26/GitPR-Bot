@@ -42,12 +42,24 @@ export async function saveInstallationKey(
   // 2. Encrypt with random IV
   const { encryptedKey, ivAndTag, last4 } = encryptApiKey(plainApiKey);
 
-  // 3. Persist to installation_settings
+  // 3. Ensure installation exists in installations table to prevent foreign key violation
   await query(
-    `UPDATE installation_settings
-     SET encrypted_key = $1, key_iv_and_tag = $2, last4 = $3, updated_at = CURRENT_TIMESTAMP
-     WHERE installation_id = $4;`,
-    [encryptedKey, ivAndTag, last4, installationId]
+    `INSERT INTO installations (installation_id, account_login, account_type)
+     VALUES ($1, $2, 'User')
+     ON CONFLICT (installation_id) DO NOTHING;`,
+    [installationId, `Installation #${installationId}`]
+  );
+
+  // 4. Persist to installation_settings (UPSERT so it creates record if not yet existing)
+  await query(
+    `INSERT INTO installation_settings (installation_id, encrypted_key, key_iv_and_tag, last4, updated_at)
+     VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+     ON CONFLICT (installation_id) DO UPDATE
+     SET encrypted_key = EXCLUDED.encrypted_key,
+         key_iv_and_tag = EXCLUDED.key_iv_and_tag,
+         last4 = EXCLUDED.last4,
+         updated_at = CURRENT_TIMESTAMP;`,
+    [installationId, encryptedKey, ivAndTag, last4]
   );
 
   return { success: true, last4 };

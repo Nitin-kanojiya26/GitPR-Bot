@@ -5,7 +5,7 @@ import {
   saveInstallationKey,
   deleteInstallationKey,
 } from "./service.js";
-import { syncInstallationRules } from "../installations/service.js";
+import { syncInstallationRules, getDefaultGuideMarkdown } from "../installations/service.js";
 import { query } from "../db/client.js";
 
 export const settingsRouter = Router();
@@ -80,8 +80,26 @@ settingsRouter.get("/", ensureAuthenticated, async (req: Request, res: Response)
   // Fetch installation settings
   let settings = await getInstallationSettings(requestedId);
 
-  // If settings record does not exist yet, supply default view object
+  // If settings record does not exist yet, supply default view object and ensure installation row exists
   if (!settings) {
+    const defaultGuide = getDefaultGuideMarkdown();
+
+    // Ensure installation exists in installations table
+    await query(
+      `INSERT INTO installations (installation_id, account_login, account_type)
+       VALUES ($1, $2, 'User')
+       ON CONFLICT (installation_id) DO NOTHING;`,
+      [requestedId, req.session.user?.login || `Installation #${requestedId}`]
+    );
+
+    // Ensure initial installation_settings record exists
+    await query(
+      `INSERT INTO installation_settings (installation_id, guide_md, index_status)
+       VALUES ($1, $2, 'pending')
+       ON CONFLICT (installation_id) DO NOTHING;`,
+      [requestedId, defaultGuide]
+    );
+
     const instRes = await query(
       "SELECT account_login, account_type FROM installations WHERE installation_id = $1",
       [requestedId]
@@ -89,13 +107,15 @@ settingsRouter.get("/", ensureAuthenticated, async (req: Request, res: Response)
     settings = {
       installation_id: requestedId,
       last4: null,
-      guide_md: "",
+      guide_md: defaultGuide,
       guide_version: 1,
       index_status: "not_configured",
-      account_login: instRes.rows[0]?.account_login || `Installation #${requestedId}`,
+      account_login: instRes.rows[0]?.account_login || req.session.user?.login || `Installation #${requestedId}`,
       account_type: instRes.rows[0]?.account_type || "User",
       updated_at: new Date(),
     };
+  } else if (!settings.guide_md) {
+    settings.guide_md = getDefaultGuideMarkdown();
   }
 
   // Retrieve logins for all authorized installations for the dropdown switcher

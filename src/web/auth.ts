@@ -246,6 +246,33 @@ authRouter.get("/callback", async (req: Request, res: Response) => {
       userInstallations.push(Number(installation_id));
     }
 
+    // Auto-upsert verified installations into database to prevent foreign key issues
+    try {
+      const { query: dbQuery } = await import("../db/client.js");
+      if (Array.isArray(instData.installations)) {
+        for (const inst of instData.installations) {
+          await dbQuery(
+            `INSERT INTO installations (installation_id, account_login, account_type)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (installation_id) DO UPDATE
+             SET account_login = EXCLUDED.account_login, account_type = EXCLUDED.account_type;`,
+            [inst.id, inst.account?.login || userData.login, inst.account?.type || "User"]
+          );
+        }
+      }
+
+      if (installation_id) {
+        await dbQuery(
+          `INSERT INTO installations (installation_id, account_login, account_type)
+           VALUES ($1, $2, 'User')
+           ON CONFLICT (installation_id) DO NOTHING;`,
+          [Number(installation_id), userData.login]
+        );
+      }
+    } catch (dbErr: any) {
+      console.warn("[WARN] [AUTH] Failed to pre-seed installations in database:", dbErr?.message || dbErr);
+    }
+
     // 5. Store verified user and installation permissions in server session
     req.session.user = {
       id: userData.id,

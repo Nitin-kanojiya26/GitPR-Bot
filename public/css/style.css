@@ -685,17 +685,19 @@ body {
 
 .code-editor {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
   background-color: var(--bg-input);
   color: var(--text-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px;
+  padding: 16px;
   resize: vertical;
+  min-height: 480px;
   tab-size: 2;
   white-space: pre;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .code-editor:focus {

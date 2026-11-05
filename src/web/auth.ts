@@ -107,7 +107,10 @@ authRouter.get("/login", (req: Request, res: Response) => {
   req.session.oauthState = state;
   req.session.returnTo = returnTo;
 
-  const redirectUri = `${process.env.BASE_URL || ""}/auth/callback`;
+  const proto = (req.get("x-forwarded-proto") || req.protocol || "https").split(",")[0].trim();
+  const host = (req.get("x-forwarded-host") || req.get("host") || "localhost:3000").split(",")[0].trim();
+  const baseUrl = (process.env.BASE_URL || `${proto}://${host}`).replace(/\/$/, "");
+  const redirectUri = `${baseUrl}/auth/callback`;
   const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&state=${state}&scope=read:user&redirect_uri=${encodeURIComponent(
     redirectUri
   )}`;

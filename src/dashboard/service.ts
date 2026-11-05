@@ -180,3 +180,4 @@ export async function getDashboardData(installationIds: number[]): Promise<Dashb
     hasData,
   };
 }
+

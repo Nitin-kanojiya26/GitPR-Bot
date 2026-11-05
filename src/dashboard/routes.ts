@@ -73,3 +73,4 @@ dashboardRouter.get("/", ensureAuthenticated, async (req: Request, res: Response
     error: null,
   });
 });
+

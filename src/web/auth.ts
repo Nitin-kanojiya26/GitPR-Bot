@@ -60,17 +60,20 @@ export const authRouter = Router();
 // GET /auth/login - Start GitHub OAuth flow
 authRouter.get("/login", (req: Request, res: Response) => {
   const clientId = process.env.CLIENT_ID;
+  const returnTo = String(req.query.returnTo || "/dashboard");
+
   if (!clientId) {
+    if (process.env.NODE_ENV !== "production") {
+      res.redirect(`/auth/dev-login?returnTo=${encodeURIComponent(returnTo)}`);
+      return;
+    }
     res.status(500).send("CLIENT_ID is not configured in server environment.");
     return;
   }
 
   const state = crypto.randomBytes(16).toString("hex");
   req.session.oauthState = state;
-
-  if (req.query.returnTo) {
-    req.session.returnTo = String(req.query.returnTo);
-  }
+  req.session.returnTo = returnTo;
 
   const redirectUri = `${process.env.BASE_URL || ""}/auth/callback`;
   const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&state=${state}&scope=read:user&redirect_uri=${encodeURIComponent(
@@ -78,6 +81,34 @@ authRouter.get("/login", (req: Request, res: Response) => {
   )}`;
 
   res.redirect(authUrl);
+});
+
+// GET /auth/dev-login - Development mode instant sign-in
+authRouter.get("/dev-login", async (req: Request, res: Response) => {
+  if (process.env.NODE_ENV === "production") {
+    res.status(403).send("Development login is disabled in production.");
+    return;
+  }
+
+  let instIds = [5567905];
+  try {
+    const { query: dbQuery } = await import("../db/client.js");
+    const instRes = await dbQuery("SELECT installation_id FROM installations LIMIT 10");
+    if (instRes.rows.length > 0) {
+      instIds = instRes.rows.map((r: any) => Number(r.installation_id));
+    }
+  } catch {
+    // Fallback to [5567905]
+  }
+
+  req.session.user = {
+    id: 1,
+    login: "local-developer",
+  };
+  req.session.installations = instIds;
+
+  const returnTo = String(req.query.returnTo || "/dashboard");
+  res.redirect(returnTo);
 });
 
 // GET /auth/callback - Exchange OAuth code and record session

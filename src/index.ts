@@ -23,7 +23,22 @@ export default (app: Probot, options?: AppOptions) => {
   // 1. Mount unified Express web application (Landing, Dashboard, Settings, Health)
   if (options?.addHandler) {
     const webApp = createWebApp(app);
-    options.addHandler(webApp);
+    options.addHandler(async (req, res) => {
+      // Allow Probot webhook path to be processed by Probot's webhook handler
+      if (req.url && req.url.startsWith("/api/github/webhooks")) {
+        return false;
+      }
+
+      await new Promise<void>((resolve) => {
+        res.on("finish", resolve);
+        res.on("close", resolve);
+        webApp(req, res, () => {
+          resolve();
+        });
+      });
+
+      return res.headersSent;
+    });
   }
 
   // 2. Start the background review worker

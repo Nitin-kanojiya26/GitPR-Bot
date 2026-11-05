@@ -91,5 +91,12 @@ export function createWebApp(probotApp?: Probot): Express {
     });
   });
 
+  // 10. Privacy policy page
+  app.get("/privacy", (_req, res) => {
+    res.render("privacy", {
+      title: "Privacy Policy - GitPR",
+    });
+  });
+
   return app;
 }

@@ -11,6 +11,7 @@ export interface ReviewParams {
   repo: string;
   pullNumber: number;
   headSha: string;
+  installationId?: number;
 }
 
 export interface Logger {
@@ -37,7 +38,8 @@ function normalizePath(filePath: string): string {
 export async function reviewPullRequest(
   octokit: OctokitInstance,
   params: ReviewParams,
-  log: Logger = console
+  log: Logger = console,
+  customApiKey?: string
 ) {
   const { owner, repo, pullNumber, headSha } = params;
 
@@ -96,7 +98,7 @@ export async function reviewPullRequest(
 
     // 4. Ask Gemini to review the code with style guide awareness
     log.info(`Sending ${diffsToReview.length} file(s) to Gemini for review...`);
-    const rawAiComments = await generateReview(diffsToReview, rulesPrompt);
+    const rawAiComments = await generateReview(diffsToReview, rulesPrompt, customApiKey);
     log.info(`Gemini returned ${rawAiComments.length} suggestion(s).`);
 
     // 5. Hallucination Defense: Drop comments on lines outside the diff

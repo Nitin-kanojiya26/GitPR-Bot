@@ -51,11 +51,12 @@ export function parseAndValidateReview(rawText: string): ReviewComment[] {
  */
 export async function generateReview(
   files: { filename: string; diff: string }[],
-  styleRulesPrompt: string = ""
+  styleRulesPrompt: string = "",
+  apiKeyOverride?: string
 ): Promise<ReviewComment[]> {
-  const apiKey = process.env.LLM_API_KEY;
+  const apiKey = apiKeyOverride || process.env.LLM_API_KEY;
   if (!apiKey) {
-    console.warn("[WARN] No LLM_API_KEY found in environment. Skipping AI review.");
+    console.warn("[WARN] No LLM API key available. Skipping AI review.");
     return [];
   }
 

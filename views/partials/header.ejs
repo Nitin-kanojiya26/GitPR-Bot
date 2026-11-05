@@ -18,9 +18,21 @@
       <div class="nav-links">
         <a href="/">Home</a>
         <a href="/setup">Setup</a>
+        <a href="/settings">Settings</a>
         <a href="/dashboard">Dashboard</a>
         <a href="/privacy">Privacy</a>
-        <a href="<%= installUrl %>" class="btn btn-primary" target="_blank" rel="noopener">Install App</a>
+        <% if (locals.user) { %>
+          <span class="user-pill">
+            <% if (locals.user.avatar_url) { %>
+              <img src="<%= locals.user.avatar_url %>" alt="avatar" class="avatar-sm">
+            <% } %>
+            <%= locals.user.login %>
+          </span>
+          <a href="/auth/logout" class="btn btn-secondary btn-sm">Sign Out</a>
+        <% } else { %>
+          <a href="/auth/login" class="btn btn-secondary btn-sm">Sign In</a>
+        <% } %>
+        <a href="<%= installUrl %>" class="btn btn-primary btn-sm" target="_blank" rel="noopener">Install App</a>
       </div>
     </div>
   </nav>

@@ -4,6 +4,11 @@ import { Probot } from "probot";
 import { ReviewJobData, QUEUE_NAME } from "./reviewQueue.js";
 import { reviewPullRequest } from "../review/reviewPR.js";
 import { acquireReviewLock } from "./idempotency.js";
+import {
+  getDecryptedInstallationKey,
+  hasPostedNoKeyWarning,
+  recordNoKeyWarning,
+} from "../settings/service.js";
 
 /**
  * Creates and starts a BullMQ Worker to process asynchronous PR review jobs.
@@ -47,6 +52,45 @@ export function createReviewWorker(app: Probot): Worker<ReviewJobData> {
         octokit = await app.auth();
       }
 
+      // 1. Fetch decrypted Gemini API key for this installation
+      let apiKey: string | null = null;
+      if (installationId) {
+        apiKey = await getDecryptedInstallationKey(installationId);
+      }
+
+      // 2. Fallback: If no tenant key is configured and no server key is present
+      if (!apiKey && !process.env.LLM_API_KEY) {
+        const repoFullName = `${owner}/${repo}`;
+        const alreadyWarned = await hasPostedNoKeyWarning(repoFullName);
+
+        if (!alreadyWarned) {
+          app.log.warn(
+            `[WARN] No Gemini API key found for installation #${installationId} on ${repoFullName}. Posting setup notice.`
+          );
+
+          const setupUrl = `${process.env.BASE_URL || ""}/setup`;
+          try {
+            await octokit.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pullNumber,
+              body: `🤖 **GitPR Setup Required**\n\nTo enable automated AI code reviews for pull requests, please configure your free Google Gemini API key at:\n👉 [**Configure GitPR Settings**](${setupUrl})\n\n*GitPR stores your key encrypted with AES-256-GCM and decrypts it only in-memory during review processing.*`,
+            });
+            await recordNoKeyWarning(installationId || 0, repoFullName, pullNumber);
+          } catch (err: any) {
+            app.log.error(
+              `[ERROR] Failed to post no-key setup comment on ${repoFullName}#${pullNumber}:`,
+              err?.message || err
+            );
+          }
+        } else {
+          app.log.info(
+            `[INFO] Skipping review for ${repoFullName}#${pullNumber}: No Gemini key configured (setup notice already posted).`
+          );
+        }
+        return;
+      }
+
       await reviewPullRequest(
         octokit,
         {
@@ -54,8 +98,10 @@ export function createReviewWorker(app: Probot): Worker<ReviewJobData> {
           repo,
           pullNumber,
           headSha,
+          installationId,
         },
-        app.log
+        app.log,
+        apiKey || undefined
       );
     },
     {

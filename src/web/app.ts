@@ -6,6 +6,7 @@ import { Probot } from "probot";
 import { checkHealth } from "../health.js";
 import { csrfProtection } from "./csrf.js";
 import { authRouter } from "./auth.js";
+import { settingsRouter } from "../settings/routes.js";
 
 export function createWebApp(probotApp?: Probot): Express {
   const app = express();
@@ -46,8 +47,9 @@ export function createWebApp(probotApp?: Probot): Express {
     next();
   });
 
-  // 6. Mount Authentication Router
+  // 6. Mount Authentication & Settings Routers
   app.use("/auth", authRouter);
+  app.use("/settings", settingsRouter);
 
   // 7. Healthcheck endpoint (/health and /healthz)
   app.get(["/health", "/healthz"], async (_req, res) => {
@@ -68,10 +70,16 @@ export function createWebApp(probotApp?: Probot): Express {
   // 8. Setup redirect target from GitHub App installation
   app.get("/setup", (req, res) => {
     if (!req.session?.user) {
-      res.redirect("/auth/login?returnTo=/setup");
+      const returnTo = req.query.installation_id
+        ? `/setup?installation_id=${encodeURIComponent(String(req.query.installation_id))}`
+        : "/setup";
+      res.redirect(`/auth/login?returnTo=${returnTo}`);
       return;
     }
-    res.redirect("/settings");
+    const target = req.query.installation_id
+      ? `/settings?installation_id=${encodeURIComponent(String(req.query.installation_id))}`
+      : "/settings";
+    res.redirect(target);
   });
 
   // 9. Landing page

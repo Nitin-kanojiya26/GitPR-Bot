@@ -12,6 +12,25 @@ import { dashboardRouter } from "../dashboard/routes.js";
 export function createWebApp(probotApp?: Probot): Express {
   const app = express();
 
+  // Dynamically resolve real GitHub App slug/URL directly from GitHub API
+  let cachedInstallUrl: string | null = null;
+  if (probotApp?.auth) {
+    probotApp
+      .auth()
+      .then((octokit: any) => octokit.apps.getAuthenticated())
+      .then((res: any) => {
+        const data = res?.data;
+        if (data?.html_url) {
+          cachedInstallUrl = `${data.html_url}/installations/new`;
+        } else if (data?.slug) {
+          cachedInstallUrl = `https://github.com/apps/${data.slug}/installations/new`;
+        }
+      })
+      .catch(() => {
+        // Non-fatal, falls back to GITHUB_APP_SLUG or gitpr-bot
+      });
+  }
+
   // 1. Configure EJS view engine
   app.set("view engine", "ejs");
   app.set("views", path.join(process.cwd(), "views"));
@@ -44,7 +63,11 @@ export function createWebApp(probotApp?: Probot): Express {
   app.use((req, res, next) => {
     res.locals.user = req.session?.user || null;
     res.locals.installations = req.session?.installations || [];
-    res.locals.installUrl = `https://github.com/apps/${process.env.GITHUB_APP_SLUG || "gitpr-review-bot"}/installations/new`;
+    const envSlug = process.env.GITHUB_APP_SLUG;
+    res.locals.installUrl =
+      (envSlug ? `https://github.com/apps/${envSlug}/installations/new` : null) ||
+      cachedInstallUrl ||
+      `https://github.com/apps/gitpr-bot/installations/new`;
     next();
   });
 

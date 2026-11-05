@@ -40,5 +40,34 @@ function loadLocalEnv(): void {
   }
 }
 
+function sanitizeEnv(): void {
+  const keysToClean = [
+    "WEBHOOK_SECRET",
+    "APP_ID",
+    "CLIENT_ID",
+    "CLIENT_SECRET",
+    "BASE_URL",
+    "ENCRYPTION_KEY",
+    "SESSION_SECRET",
+    "DATABASE_URL",
+    "REDIS_URL",
+  ];
+
+  for (const key of keysToClean) {
+    const val = process.env[key];
+    if (typeof val === "string") {
+      let cleaned = val.trim();
+      if (
+        (cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+        (cleaned.startsWith("'") && cleaned.endsWith("'"))
+      ) {
+        cleaned = cleaned.slice(1, -1).trim();
+      }
+      process.env[key] = cleaned;
+    }
+  }
+}
+
 loadLocalEnv();
+sanitizeEnv();
 

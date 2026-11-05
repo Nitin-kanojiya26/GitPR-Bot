@@ -16,6 +16,8 @@ export interface OutcomeRates {
   open_count: number;
   fixed_rate: number;
   ignored_rate: number;
+  fixed_pct: number | null;
+  ignored_pct: number | null;
 }
 
 export interface RecentReview {
@@ -51,6 +53,8 @@ export async function getDashboardData(installationIds: number[]): Promise<Dashb
         open_count: 0,
         fixed_rate: 0,
         ignored_rate: 0,
+        fixed_pct: null,
+        ignored_pct: null,
       },
       recentReviews: [],
       hasData: false,
@@ -147,12 +151,20 @@ export async function getDashboardData(installationIds: number[]): Promise<Dashb
   }));
 
   const outcomeRatesRow = outcomeRatesRes.rows[0] || {};
+  const fixedCount = Number(outcomeRatesRow.fixed_count) || 0;
+  const ignoredCount = Number(outcomeRatesRow.ignored_count) || 0;
+  const hasDecided = fixedCount + ignoredCount > 0;
+  const fixedRate = Number(outcomeRatesRow.fixed_rate) || 0;
+  const ignoredRate = Number(outcomeRatesRow.ignored_rate) || 0;
+
   const outcomeRates: OutcomeRates = {
-    fixed_count: Number(outcomeRatesRow.fixed_count) || 0,
-    ignored_count: Number(outcomeRatesRow.ignored_count) || 0,
+    fixed_count: fixedCount,
+    ignored_count: ignoredCount,
     open_count: Number(outcomeRatesRow.open_count) || 0,
-    fixed_rate: Number(outcomeRatesRow.fixed_rate) || 0,
-    ignored_rate: Number(outcomeRatesRow.ignored_rate) || 0,
+    fixed_rate: fixedRate,
+    ignored_rate: ignoredRate,
+    fixed_pct: hasDecided ? fixedRate : null,
+    ignored_pct: hasDecided ? ignoredRate : null,
   };
 
   const recentReviews: RecentReview[] = recentReviewsRes.rows.map((r) => ({

@@ -98,5 +98,10 @@ export function createWebApp(probotApp?: Probot): Express {
     });
   });
 
+  // 11. Probot default fallback redirect (ensures /probot always routes to landing page)
+  app.use("/probot", (_req, res) => {
+    res.redirect("/");
+  });
+
   return app;
 }

@@ -1,3 +1,6 @@
+import "./env.js";
+import http from "node:http";
+import type { Express } from "express";
 import { Probot } from "probot";
 import { reviewQueue } from "./queue/reviewQueue.js";
 import { createReviewWorker } from "./queue/worker.js";
@@ -20,10 +23,63 @@ interface AppOptions {
   [key: string]: unknown;
 }
 
+let activeWebApp: Express | null = null;
+
+// Intercept HTTP server requests at the event level to ensure "/" and "/probot"
+// are handled by our application before Probot's defaultApp can trigger a 302 redirect.
+const originalOn = http.Server.prototype.on;
+const originalAddListener = http.Server.prototype.addListener;
+
+function wrapRequestListener(
+  listener: (req: http.IncomingMessage, res: http.ServerResponse) => void
+) {
+  return function (this: http.Server, req: http.IncomingMessage, res: http.ServerResponse) {
+    const rawPath = req.url?.split("?")[0] || "";
+
+    // 1. Intercept GET "/" directly and delegate to our Express landing page
+    if (req.method === "GET" && rawPath === "/") {
+      if (activeWebApp) {
+        return activeWebApp(req, res);
+      }
+    }
+
+    // 2. Intercept any "/probot" requests and redirect cleanly to "/"
+    if (rawPath === "/probot" || rawPath.startsWith("/probot/")) {
+      res.writeHead(302, { Location: "/" });
+      return res.end();
+    }
+
+    return listener.call(this, req, res);
+  };
+}
+
+http.Server.prototype.on = function (
+  this: http.Server,
+  event: string | symbol,
+  listener: any
+) {
+  if (event === "request" && typeof listener === "function") {
+    return (originalOn as any).call(this, event, wrapRequestListener(listener));
+  }
+  return (originalOn as any).call(this, event, listener);
+};
+
+http.Server.prototype.addListener = function (
+  this: http.Server,
+  event: string | symbol,
+  listener: any
+) {
+  if (event === "request" && typeof listener === "function") {
+    return (originalAddListener as any).call(this, event, wrapRequestListener(listener));
+  }
+  return (originalAddListener as any).call(this, event, listener);
+};
+
 const gitPrApp = (app: Probot, options?: AppOptions) => {
   // 1. Mount unified Express web application (Landing, Dashboard, Settings, Health)
   if (options?.addHandler) {
     const webApp = createWebApp(app);
+    activeWebApp = webApp;
     options.addHandler(async (req, res) => {
       // Allow Probot webhook path to be processed by Probot's webhook handler
       if (req.url && req.url.startsWith("/api/github/webhooks")) {
@@ -208,7 +264,7 @@ if (isDirectRun) {
       env: {
         ...process.env,
         HOST: process.env.HOST || "0.0.0.0",
-        PORT: process.env.PORT || "10000",
+        PORT: process.env.PORT || "3000",
       },
     });
   });

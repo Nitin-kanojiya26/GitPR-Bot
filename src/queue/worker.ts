@@ -25,6 +25,12 @@ export function createReviewWorker(app: Probot): Worker<ReviewJobData> {
     maxRetriesPerRequest: null,
   });
 
+  workerConnection.on("error", (err: any) => {
+    if (process.env.NODE_ENV !== "test") {
+      app.log.warn(`[WARN] [QueueWorker] Redis connection error: ${err?.message || err}`);
+    }
+  });
+
   const worker = new Worker<ReviewJobData>(
     QUEUE_NAME,
     async (job: Job<ReviewJobData>) => {

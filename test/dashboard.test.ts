@@ -113,6 +113,8 @@ describe("Four-Panel Analytics Dashboard", () => {
       expect(data.outcomeRates.ignored_count).toBe(2);
       expect(data.outcomeRates.fixed_rate).toBe(75.0);
       expect(data.outcomeRates.ignored_rate).toBe(25.0);
+      expect(data.outcomeRates.fixed_pct).toBe(75.0);
+      expect(data.outcomeRates.ignored_pct).toBe(25.0);
 
       // Panel 4: Recent reviews
       expect(data.recentReviews).toHaveLength(1);

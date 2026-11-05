@@ -108,4 +108,19 @@ describe("Unified Web Application", () => {
     expect(result.status).toBe(302);
     expect(result.headers["location"]).toContain("/auth/login?returnTo=/setup");
   });
+
+  it("redirects GET /probot to / so users never see the default probot page", async () => {
+    const app = createWebApp();
+
+    const result = await new Promise<{ status: number; headers: Record<string, any> }>((resolve) => {
+      const req = createMockReq({ method: "GET", url: "/probot" });
+      const res = createMockRes((status, headers) => {
+        resolve({ status, headers });
+      });
+      app.handle(req, res);
+    });
+
+    expect(result.status).toBe(302);
+    expect(result.headers["location"]).toBe("/");
+  });
 });

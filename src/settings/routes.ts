@@ -5,6 +5,7 @@ import {
   saveInstallationKey,
   deleteInstallationKey,
 } from "./service.js";
+import { syncInstallationRules } from "../installations/service.js";
 import { query } from "../db/client.js";
 
 export const settingsRouter = Router();
@@ -190,3 +191,63 @@ async function handleDeleteKey(req: Request, res: Response) {
 
 settingsRouter.post("/key/delete", ensureAuthenticated, handleDeleteKey);
 settingsRouter.delete("/key", ensureAuthenticated, handleDeleteKey);
+
+/**
+ * Common handler for updating and re-indexing the style guide markdown.
+ * Supports both PUT /settings/guide (REST/AJAX) and POST /settings/guide (HTML form submission).
+ */
+export async function handleUpdateGuide(req: Request, res: Response) {
+  const userInstallations = (req.session.installations || []).map(Number);
+  const installationId = Number(req.body.installation_id);
+  const guideMd = typeof req.body.guide_md === "string" ? req.body.guide_md : "";
+  const isJson = req.xhr || req.headers["accept"]?.includes("json") || req.is("json");
+
+  // Multi-tenant authorization check
+  if (!installationId || !userInstallations.includes(installationId)) {
+    if (isJson) {
+      return res.status(403).json({ error: "Forbidden: Unauthorized installation ID." });
+    }
+    return res.status(403).send("Forbidden: Invalid or unauthorized installation ID.");
+  }
+
+  // Length validation: max 20,000 characters
+  if (guideMd.length > 20000) {
+    const errorMsg = `Style guide exceeds maximum allowed limit of 20,000 characters (current: ${guideMd.length}).`;
+    if (isJson) {
+      return res.status(400).json({ success: false, error: errorMsg });
+    }
+    return res.redirect(
+      `/settings?installation_id=${installationId}&error=${encodeURIComponent(errorMsg)}`
+    );
+  }
+
+  try {
+    const result = await syncInstallationRules(installationId, guideMd);
+
+    if (isJson) {
+      return res.json({
+        success: true,
+        ruleCount: result.ruleCount,
+        index_status: "indexed",
+      });
+    }
+
+    return res.redirect(
+      `/settings?installation_id=${installationId}&success=${encodeURIComponent(
+        `Review guide updated successfully! ${result.ruleCount} rule(s) embedded into pgvector.`
+      )}`
+    );
+  } catch (err: any) {
+    const errorMsg = err?.message || "Failed to update and index review guide.";
+    if (isJson) {
+      return res.status(400).json({ success: false, error: errorMsg });
+    }
+    return res.redirect(
+      `/settings?installation_id=${installationId}&error=${encodeURIComponent(errorMsg)}`
+    );
+  }
+}
+
+settingsRouter.post("/guide", ensureAuthenticated, handleUpdateGuide);
+settingsRouter.put("/guide", ensureAuthenticated, handleUpdateGuide);
+

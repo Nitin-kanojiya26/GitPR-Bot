@@ -1,5 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
-import pg from "pg";
+import { embedText } from "./embed.js";
+import { query as dbQuery } from "../db/client.js";
 
 export interface RetrievedRule {
   title: string;
@@ -8,7 +8,7 @@ export interface RetrievedRule {
 }
 
 /**
- * Pure helper function to format retrieved style guide rules for prompt injection.
+ * Formats retrieved style guide rules for prompt injection.
  */
 export function formatRulesForPrompt(rules: RetrievedRule[]): string {
   if (!rules || rules.length === 0) {
@@ -23,56 +23,43 @@ export function formatRulesForPrompt(rules: RetrievedRule[]): string {
 }
 
 /**
- * Retrieves the top-K most semantically relevant style rules from pgvector.
+ * Retrieves the top-K most semantically relevant style rules from pgvector,
+ * strictly scoped to the specific installation tenant.
  */
 export async function retrieveRules(
-  query: string,
+  queryText: string,
   limit: number = 3,
-  repoFullName: string = "global"
+  installationId?: number | string
 ): Promise<RetrievedRule[]> {
-  const apiKey = process.env.LLM_API_KEY;
-  const dbUrl = process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5433/reviewbot";
-
-  if (!apiKey) {
-    console.warn("[WARN] LLM_API_KEY is not configured. Skipping rule retrieval.");
+  if (!queryText || queryText.trim().length === 0) {
     return [];
   }
 
-  if (!query || query.trim().length === 0) {
+  if (!installationId) {
     return [];
   }
-
-  const client = new pg.Client({ connectionString: dbUrl });
 
   try {
-    // 1. Generate 768-dimensional embedding for query text
-    const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.embedContent({
-      model: "gemini-embedding-001",
-      contents: query,
-      config: {
-        outputDimensionality: 768,
-      },
-    });
-
-    const embedding = response.embeddings?.[0]?.values;
+    // 1. Generate embedding using server-side embedder
+    const embedding = await embedText(queryText);
     if (!embedding || embedding.length === 0) {
-      console.warn("[WARN] Failed to compute embedding for retrieval query.");
       return [];
     }
 
-    // 2. Query Postgres using cosine distance operator (<=>)
-    await client.connect();
-
+    // 2. Query Postgres rules table scoped strictly by installation_id
     const sql = `
       SELECT title, content, (1 - (embedding <=> $1::vector)) AS similarity
-      FROM style_rules
-      WHERE repo_full_name = $3 OR repo_full_name = 'global'
+      FROM rules
+      WHERE installation_id = $2 AND embedding IS NOT NULL
       ORDER BY embedding <=> $1::vector
-      LIMIT $2;
+      LIMIT $3;
     `;
 
-    const result = await client.query(sql, [JSON.stringify(embedding), limit, repoFullName]);
+    const result = await dbQuery(sql, [
+      JSON.stringify(embedding),
+      installationId,
+      limit,
+    ]);
 
     return result.rows.map((row) => ({
       title: row.title,
@@ -82,12 +69,5 @@ export async function retrieveRules(
   } catch (error: any) {
     console.error("[ERROR] Rule retrieval failed:", error?.message || error);
     return [];
-  } finally {
-    try {
-      await client.end();
-    } catch {
-      // Ignore disconnect errors
-    }
   }
 }
-

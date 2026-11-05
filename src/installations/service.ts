@@ -87,11 +87,15 @@ export async function syncInstallationRules(
       );
     }
 
-    // 3. Update settings record with markdown and indexed status
+    // 3. Atomically update settings record, increment version, and set status to indexed
     await client.query(
-      `UPDATE installation_settings
-       SET guide_md = $1, index_status = 'indexed', updated_at = CURRENT_TIMESTAMP
-       WHERE installation_id = $2;`,
+      `INSERT INTO installation_settings (installation_id, guide_md, guide_version, index_status, updated_at)
+       VALUES ($2, $1, 1, 'indexed', CURRENT_TIMESTAMP)
+       ON CONFLICT (installation_id) DO UPDATE
+       SET guide_md = EXCLUDED.guide_md,
+           guide_version = COALESCE(installation_settings.guide_version, 0) + 1,
+           index_status = 'indexed',
+           updated_at = CURRENT_TIMESTAMP;`,
       [guideMarkdown, installationId]
     );
 
@@ -102,7 +106,7 @@ export async function syncInstallationRules(
     // Mark as failed in settings
     await client
       .query(
-        "UPDATE installation_settings SET index_status = 'failed' WHERE installation_id = $1;",
+        "UPDATE installation_settings SET index_status = 'failed', updated_at = CURRENT_TIMESTAMP WHERE installation_id = $1;",
         [installationId]
       )
       .catch(() => null);

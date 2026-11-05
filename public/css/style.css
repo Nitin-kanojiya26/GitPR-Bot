@@ -451,3 +451,23 @@ footer a {
   text-align: center;
   padding: 60px 20px;
 }
+
+.code-editor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  background-color: var(--bg-primary);
+  color: var(--text-heading);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 14px;
+  resize: vertical;
+  tab-size: 2;
+  white-space: pre;
+}
+
+.code-editor:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+}

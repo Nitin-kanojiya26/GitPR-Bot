@@ -72,3 +72,4 @@ export function decryptApiKey(encryptedHex: string, ivAndTagHex: string): string
   const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
   return decrypted.toString("utf8");
 }
+

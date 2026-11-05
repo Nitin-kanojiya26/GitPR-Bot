@@ -128,21 +128,57 @@
         <div class="card-header">
           <div>
             <h2>Review Style Guide</h2>
-            <p class="card-subtitle">Custom rules embedded and retrieved with pgvector RAG.</p>
+            <p class="card-subtitle">Custom rules parsed, embedded, and retrieved with pgvector RAG per PR.</p>
           </div>
-          <span class="badge badge-info">v<%= settings.guide_version %> &bull; <%= settings.index_status || 'Pending' %></span>
+          <% if (settings.index_status === 'indexed') { %>
+            <span class="badge badge-success">Indexed (v<%= settings.guide_version %>)</span>
+          <% } else if (settings.index_status === 'failed') { %>
+            <span class="badge badge-warning" style="color: var(--danger); border-color: rgba(248,81,73,0.4);">Index Failed</span>
+          <% } else { %>
+            <span class="badge badge-warning"><%= settings.index_status || 'Pending' %> (v<%= settings.guide_version %>)</span>
+          <% } %>
         </div>
 
         <div class="card-body">
-          <p class="text-muted" style="margin-bottom: 12px;">
-            Your guide is parsed into markdown sections, converted into 768-dimensional embeddings, and semantically matched against pull request diffs.
+          <p class="text-muted" style="margin-bottom: 14px;">
+            Edit your team's code review guidelines below. When you click <strong>Save & Re-Index</strong>, GitPR splits each <code>## </code> rule, generates 768-dimensional vector embeddings, and atomically swaps your rules in the database.
           </p>
-          <div class="guide-preview-box">
-            <pre class="guide-pre"><code><%= settings.guide_md ? settings.guide_md.slice(0, 1500) + (settings.guide_md.length > 1500 ? '\n... (truncated)' : '') : 'No custom guide configured. Default rules will be used.' %></code></pre>
-          </div>
-          <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
-            <span class="text-muted" style="font-size: 0.85rem;">Last updated: <%= settings.updated_at ? new Date(settings.updated_at).toLocaleDateString() : 'Never' %></span>
-            <span class="badge badge-secondary">Editable in Step 6</span>
+
+          <form action="/settings/guide" method="POST" class="form-stacked">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="installation_id" value="<%= settings.installation_id %>">
+
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label for="guide_md" style="font-weight: 600;">Guide Markdown:</label>
+                <span id="char-count" class="text-muted" style="font-size: 0.85rem;">Max 20,000 characters &bull; Max 30 rules</span>
+              </div>
+              <textarea
+                name="guide_md"
+                id="guide_md"
+                class="form-control code-editor"
+                rows="18"
+                maxlength="20000"
+                placeholder="# Team Style Guide&#10;&#10;## 1. Rule Title&#10;Explanation...&#10;&#10;### ❌ Bad Example&#10;...&#10;&#10;### ✅ Good Example&#10;..."
+                required
+              ><%= settings.guide_md || '' %></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 10px;">
+              <span class="text-muted" style="font-size: 0.85rem;">
+                Last updated: <%= settings.updated_at ? new Date(settings.updated_at).toLocaleString() : 'Never' %>
+              </span>
+              <button type="submit" class="btn btn-primary">Save & Re-Index Guide</button>
+            </div>
+          </form>
+
+          <div class="security-callout" style="margin-top: 20px;">
+            <strong>Atomic Re-Indexing & Safety:</strong>
+            <ul>
+              <li><strong>Zero Partial States:</strong> Rule deletions and re-indexing execute inside a single PostgreSQL transaction. Running reviews see either the complete old guide or the complete new guide.</li>
+              <li><strong>Prompt Injection Defense:</strong> Style guide rules are treated as UNTRUSTED DATA in the LLM prompt. Text inside rules cannot override bot system instructions.</li>
+              <li><strong>Embedding Dimension:</strong> Generated using Google Gemini 768-dimensional embeddings stored in a pgvector column.</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -151,3 +187,4 @@
 </div>
 
 <%- include('partials/footer') %>
+

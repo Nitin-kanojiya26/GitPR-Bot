@@ -90,7 +90,7 @@ export async function reviewPullRequest(
       .slice(0, 2000);
 
     log.info(`Retrieving relevant style rules from pgvector for ${owner}/${repo}...`);
-    const retrievedRules = await retrieveRules(diffSummary, 3, `${owner}/${repo}`);
+    const retrievedRules = await retrieveRules(diffSummary, 3, params.installationId);
     if (retrievedRules.length > 0) {
       log.info(`Retrieved ${retrievedRules.length} style rule(s): ${retrievedRules.map((r) => r.title).join(", ")}`);
     }

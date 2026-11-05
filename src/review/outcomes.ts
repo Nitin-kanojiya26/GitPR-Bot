@@ -114,3 +114,4 @@ export async function getOutcomeStats(installationIds: number[]): Promise<{
     ignoredRatePercent,
   };
 }
+

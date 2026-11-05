@@ -7,6 +7,7 @@ import { checkHealth } from "../health.js";
 import { csrfProtection } from "./csrf.js";
 import { authRouter } from "./auth.js";
 import { settingsRouter } from "../settings/routes.js";
+import { dashboardRouter } from "../dashboard/routes.js";
 
 export function createWebApp(probotApp?: Probot): Express {
   const app = express();
@@ -47,9 +48,10 @@ export function createWebApp(probotApp?: Probot): Express {
     next();
   });
 
-  // 6. Mount Authentication & Settings Routers
+  // 6. Mount Authentication, Settings & Dashboard Routers
   app.use("/auth", authRouter);
   app.use("/settings", settingsRouter);
+  app.use("/dashboard", dashboardRouter);
 
   // 7. Healthcheck endpoint (/health and /healthz)
   app.get(["/health", "/healthz"], async (_req, res) => {

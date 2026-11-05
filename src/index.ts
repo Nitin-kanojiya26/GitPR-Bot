@@ -8,6 +8,11 @@ import {
   handleInstallationCreated,
   handleInstallationDeleted,
 } from "./installations/service.js";
+import {
+  markThreadResolved,
+  markThreadUnresolved,
+  markUnresolvedCommentsIgnored,
+} from "./review/outcomes.js";
 
 interface AppOptions {
   addHandler?: (handler: (req: any, res: any) => Promise<boolean | void> | boolean | void) => void;
@@ -120,4 +125,46 @@ export default (app: Probot, options?: AppOptions) => {
       );
     }
   );
+
+  // 5. Outcome Tracking: Listen for PR close and review thread resolution events
+  app.on("pull_request.closed", async (context) => {
+    const pr = context.payload.pull_request;
+    const repoFullName = context.payload.repository.full_name;
+    const isMerged = Boolean(pr.merged);
+
+    context.log.info(
+      `[INFO] PR #${pr.number} on ${repoFullName} closed (merged: ${isMerged}). Marking unresolved comments as 'ignored'.`
+    );
+
+    const updated = await markUnresolvedCommentsIgnored(repoFullName, pr.number);
+    context.log.info(
+      `[SUCCESS] Marked ${updated} unresolved comment(s) as 'ignored' on ${repoFullName}#${pr.number}`
+    );
+  });
+
+  app.on("pull_request_review_thread.resolved" as any, async (context: any) => {
+    const thread = context.payload.thread;
+    const repoFullName = context.payload.repository.full_name;
+    const commentIds = (thread?.comments || []).map((c: any) => c.id);
+
+    context.log.info(
+      `[INFO] Review thread resolved on ${repoFullName} (comment IDs: [${commentIds.join(", ")}]). Updating outcome to 'fixed'.`
+    );
+
+    const updated = await markThreadResolved(commentIds);
+    context.log.info(`[SUCCESS] Marked ${updated} comment(s) as 'fixed' on ${repoFullName}`);
+  });
+
+  app.on("pull_request_review_thread.unresolved" as any, async (context: any) => {
+    const thread = context.payload.thread;
+    const repoFullName = context.payload.repository.full_name;
+    const commentIds = (thread?.comments || []).map((c: any) => c.id);
+
+    context.log.info(
+      `[INFO] Review thread unresolved on ${repoFullName} (comment IDs: [${commentIds.join(", ")}]). Reverting outcome to 'open'.`
+    );
+
+    const updated = await markThreadUnresolved(commentIds);
+    context.log.info(`[SUCCESS] Reverted ${updated} comment(s) back to 'open' on ${repoFullName}`);
+  });
 };

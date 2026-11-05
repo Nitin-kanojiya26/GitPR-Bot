@@ -3,6 +3,7 @@ import { getCommentableLines, numberedDiff } from "./diff.js";
 import { shouldReviewFile, filterDuplicateComments } from "./filters.js";
 import { generateReview, ReviewComment } from "./llm.js";
 import { retrieveRules, formatRulesForPrompt } from "./rag.js";
+import { recordReviewResult, determineRuleTitle } from "./persistence.js";
 
 export type OctokitInstance = Context["octokit"];
 
@@ -41,7 +42,8 @@ export async function reviewPullRequest(
   log: Logger = console,
   customApiKey?: string
 ) {
-  const { owner, repo, pullNumber, headSha } = params;
+  const { owner, repo, pullNumber, headSha, installationId } = params;
+  const startTime = Date.now();
 
   log.info(`Starting review for ${owner}/${repo}#${pullNumber} at commit ${headSha.slice(0, 7)}`);
 
@@ -80,6 +82,17 @@ export async function reviewPullRequest(
 
     if (diffsToReview.length === 0) {
       log.info(`No reviewable code files found in PR #${pullNumber}.`);
+      if (installationId) {
+        await recordReviewResult({
+          installationId,
+          repo: `${owner}/${repo}`,
+          prNumber: pullNumber,
+          headSha,
+          status: "completed",
+          commentsPosted: 0,
+          durationMs: Date.now() - startTime,
+        });
+      }
       return;
     }
 
@@ -175,6 +188,18 @@ export async function reviewPullRequest(
         event: "COMMENT",
         body: "🤖 **AI Pull Request Review**\n\n✅ Checked changed files. No bugs, security issues, or major style violations found. Clean work!",
       });
+
+      if (installationId) {
+        await recordReviewResult({
+          installationId,
+          repo: `${owner}/${repo}`,
+          prNumber: pullNumber,
+          headSha,
+          status: "completed",
+          commentsPosted: 0,
+          durationMs: Date.now() - startTime,
+        });
+      }
       return;
     }
 
@@ -186,7 +211,7 @@ export async function reviewPullRequest(
       body: `**[${c.severity.toUpperCase()}]** ${c.comment}`,
     }));
 
-    await octokit.rest.pulls.createReview({
+    const { data: createdReview } = await octokit.rest.pulls.createReview({
       owner,
       repo,
       pull_number: pullNumber,
@@ -197,7 +222,65 @@ export async function reviewPullRequest(
     });
 
     log.info(`[SUCCESS] Successfully posted AI review with ${newComments.length} comment(s)!`);
-  } catch (error) {
+
+    // Fetch review comments to retrieve GitHub comment IDs
+    let reviewCommentsOnGithub: any[] = [];
+    if (createdReview?.id) {
+      try {
+        const { data: commentsList } = await octokit.rest.pulls.listCommentsForReview({
+          owner,
+          repo,
+          pull_number: pullNumber,
+          review_id: Number(createdReview.id),
+        });
+        reviewCommentsOnGithub = commentsList;
+      } catch (err: any) {
+        log.warn(`[WARN] Could not fetch GitHub comment IDs for review #${createdReview.id}: ${err?.message || err}`);
+      }
+    }
+
+    if (installationId) {
+      const persistedComments = newComments.map((c) => {
+        const matched = reviewCommentsOnGithub.find(
+          (gc) => gc.path === c.file && gc.line === c.line
+        );
+        const resolvedRuleTitle = determineRuleTitle(c, retrievedRules);
+        return {
+          file: c.file,
+          line: c.line,
+          severity: c.severity,
+          comment: c.comment,
+          rule_title: resolvedRuleTitle,
+          githubCommentId: matched?.id || null,
+        };
+      });
+
+      await recordReviewResult({
+        installationId,
+        repo: `${owner}/${repo}`,
+        prNumber: pullNumber,
+        headSha,
+        status: "completed",
+        commentsPosted: newComments.length,
+        durationMs: Date.now() - startTime,
+        comments: persistedComments,
+      });
+    }
+  } catch (error: any) {
     log.error(`[ERROR] Review failed for PR #${pullNumber}:`, error);
+    if (params.installationId) {
+      const isRateLimit =
+        String(error?.status) === "429" || String(error?.message).includes("429");
+      await recordReviewResult({
+        installationId: params.installationId,
+        repo: `${owner}/${repo}`,
+        prNumber: pullNumber,
+        headSha,
+        status: isRateLimit ? "rate_limited" : "error",
+        commentsPosted: 0,
+        error: error?.message || String(error),
+        durationMs: Date.now() - startTime,
+      });
+    }
   }
 }

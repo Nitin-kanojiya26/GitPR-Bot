@@ -6,6 +6,7 @@ export const CommentSchema = z.object({
   line: z.number().int().positive(),
   severity: z.enum(["low", "medium", "high", "critical"]),
   comment: z.string().min(1).max(600),
+  rule_title: z.string().optional(),
 });
 
 export const OutputSchema = z.object({

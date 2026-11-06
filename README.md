@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Install App](https://img.shields.io/badge/GitHub_App-Install_Vigilentia-2ea44f?style=for-the-badge&logo=github)](https://github.com/apps/gitpr-bot)
+[![Install App](https://img.shields.io/badge/GitHub_App-Install_Vigilentia-2ea44f?style=for-the-badge&logo=github)](https://github.com/apps/vigilentia)
 
 ### [🚀 Open Live Dashboard & Settings](https://gitpr-bot.onrender.com) &bull; [📦 Install on Your GitHub Repositories](https://github.com/apps/gitpr-bot)
 

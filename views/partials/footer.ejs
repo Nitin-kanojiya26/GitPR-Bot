@@ -1,11 +1,28 @@
-  <footer>
-    <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-      <p style="margin: 0;">&copy; <%= new Date().getFullYear() %> Vigilentia &bull; Autonomous Pull Request Reviewer</p>
-      <div style="display: flex; gap: 16px;">
-        <a href="/privacy">Privacy</a>
-        <a href="/health">Health</a>
-        <a href="https://github.com/Nitin-kanojiya26/vigilentia" target="_blank" rel="noopener">GitHub</a>
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-meta">
+        <div class="footer-brand">
+          <span class="footer-title">Vigilentia</span>
+          <span class="footer-bullet">&bull;</span>
+          <span class="footer-desc">Autonomous Pull Request Reviewer</span>
+        </div>
+        <p class="footer-copyright">&copy; <%= new Date().getFullYear() %> Vigilentia. Built with TypeScript, Probot & pgvector.</p>
       </div>
+
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="/" class="footer-link">Home</a>
+        <a href="/dashboard" class="footer-link">Dashboard</a>
+        <a href="/settings" class="footer-link">Settings</a>
+        <a href="/privacy" class="footer-link">Privacy Policy</a>
+        <a href="/health" class="footer-link">System Health</a>
+        <a href="https://github.com/Nitin-kanojiya26/vigilentia" class="footer-link footer-link-ext" target="_blank" rel="noopener">
+          <span>GitHub</span>
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+          </svg>
+        </a>
+      </nav>
     </div>
   </footer>
 </body>

@@ -66,6 +66,7 @@ export function createWebApp(probotApp?: Probot): Express {
   app.use((req, res, next) => {
     res.locals.user = req.session?.user || null;
     res.locals.installations = req.session?.installations || [];
+    res.locals.currentPath = req.path || "/";
     const envSlug = process.env.GITHUB_APP_SLUG;
     res.locals.installUrl =
       (envSlug ? `https://github.com/apps/${envSlug}/installations/new` : null) ||

@@ -1,43 +1,76 @@
 <%- include('partials/header') %>
 
-<main class="container">
+<main class="container page-content">
   <section class="hero">
-    <div class="hero-tag">GitHub App &bull; AI Code Reviewer</div>
-    <h1>Automated code reviews for GitHub pull requests.</h1>
-    <p>
-      Vigilentia reviews changed lines in pull requests, catches bugs and vulnerabilities, and enforces your team's custom style standards.
+    <div class="hero-tag">
+      <span class="hero-pill">GitHub App</span>
+      <span class="hero-tag-sep">&bull;</span>
+      <span>Autonomous AI Code Reviewer</span>
+    </div>
+    <h1 class="hero-title">Automated code reviews for GitHub pull requests.</h1>
+    <p class="hero-desc">
+      Vigilentia reviews changed lines in pull requests, catches bugs and vulnerabilities, and enforces your team's custom style standards with in-database RAG.
     </p>
     <div class="hero-actions">
-      <a href="<%= installUrl %>" class="btn btn-primary" target="_blank" rel="noopener">Install on GitHub</a>
-      <a href="/setup" class="btn btn-secondary">Configure Key</a>
+      <a href="<%= installUrl %>" class="btn btn-primary btn-lg" target="_blank" rel="noopener">
+        <span>Install on GitHub</span>
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+          <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+          <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+        </svg>
+      </a>
+      <a href="/dashboard" class="btn btn-secondary btn-lg">View Dashboard</a>
+      <a href="/settings" class="btn btn-secondary btn-lg">Settings & Key</a>
     </div>
   </section>
 
-  <section class="features">
+  <section class="features" aria-label="Core Capabilities">
     <div class="feature-card">
+      <div class="feature-icon-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
       <h3>Bring Your Own Gemini Key</h3>
-      <p>Zero subscription fees. Connect your free Google Gemini API key, encrypted with AES-256-GCM.</p>
+      <p>Zero subscription fees. Connect your free Google Gemini API key, securely encrypted at rest with AES-256-GCM.</p>
     </div>
 
     <div class="feature-card">
+      <div class="feature-icon-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+      </div>
       <h3>Custom Style Guides & RAG</h3>
-      <p>Edit guidelines in Markdown. PostgreSQL pgvector matches relevant rules directly against changed files.</p>
+      <p>Edit guidelines directly in Markdown. PostgreSQL pgvector computes 768-D embeddings and cites matching rules on diffs.</p>
     </div>
 
     <div class="feature-card">
+      <div class="feature-icon-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+      </div>
       <h3>Four-Panel Analytics</h3>
-      <p>Track weekly review volume, top cited style rules, fix vs ignore ratios, and full review history.</p>
+      <p>Live metrics tracking comments per week, top triggered guidelines, fixed vs ignored outcomes, and full audit logs.</p>
     </div>
   </section>
 
   <section class="callout-banner">
-    <div>
+    <div class="callout-content">
       <h3>Zero Installation Required</h3>
       <p>
         Cloud-hosted GitHub App. Developers on your team never download binaries or modify CI pipelines. Install on your repo to receive automated reviews.
       </p>
     </div>
-    <a href="/privacy" class="btn btn-secondary btn-sm">Privacy Details &rarr;</a>
+    <div class="callout-action">
+      <a href="/privacy" class="btn btn-secondary">Privacy & Encryption Details &rarr;</a>
+    </div>
   </section>
 </main>
 

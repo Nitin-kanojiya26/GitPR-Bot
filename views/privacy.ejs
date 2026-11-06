@@ -1,58 +1,58 @@
 <%- include('partials/header') %>
 
-<div class="container" style="max-width: 760px; padding-bottom: 50px;">
+<main class="container page-content" style="max-width: 780px;">
   <div class="page-header">
-    <div>
+    <div class="page-header-text">
       <h1>Vigilentia Privacy Policy</h1>
-      <p class="subtitle">Data handling, encryption, and deletion policies.</p>
+      <p class="subtitle">Ephemeral code handling, zero permanent storage, and BYOK encryption.</p>
     </div>
   </div>
 
-  <div class="card" style="display: flex; flex-direction: column; gap: 24px;">
-    <section>
-      <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 8px;">1. Code Diffs & LLM Processing</h2>
-      <ul style="margin-left: 20px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.7;">
-        <li><strong style="color: var(--text-main);">Ephemeral Diff Transmission:</strong> Diffs are sent directly to the Google Gemini API to analyze for bugs and security vulnerabilities.</li>
-        <li><strong style="color: var(--text-main);">Zero Permanent Code Storage:</strong> Source code is never stored in our database or on disk. Once posted, diffs are immediately discarded from memory.</li>
-        <li><strong style="color: var(--text-main);">Model Training Protection:</strong> Requests made with your API key are governed by Google GenAI terms and not used for model training.</li>
-        <li><strong style="color: var(--text-main);">Prompt Injection Defense:</strong> Diffs and guidelines are treated as untrusted data boundary inputs.</li>
+  <div class="card privacy-card">
+    <section class="privacy-section">
+      <h2>1. Code Diffs & LLM Processing</h2>
+      <ul class="privacy-list">
+        <li><strong>Ephemeral Diff Transmission:</strong> Diffs are sent directly to the Google Gemini API to analyze for bugs and security vulnerabilities.</li>
+        <li><strong>Zero Permanent Code Storage:</strong> Source code is never stored in our database or on disk. Once posted, diffs are immediately discarded from memory.</li>
+        <li><strong>Model Training Protection:</strong> Requests made with your API key are governed by Google GenAI terms and not used for model training.</li>
+        <li><strong>Prompt Injection Defense:</strong> Diffs and guidelines are treated as untrusted data boundary inputs.</li>
       </ul>
     </section>
 
-    <section style="border-top: 1px solid var(--border); padding-top: 20px;">
-      <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 8px;">2. Bring-Your-Own-Key (BYOK) Encryption</h2>
-      <ul style="margin-left: 20px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.7;">
-        <li><strong style="color: var(--text-main);">AES-256-GCM Encryption:</strong> Stored with unique 96-bit initialization vectors and authentication tags.</li>
-        <li><strong style="color: var(--text-main);">Master Key:</strong> Kept in the server environment (<code>ENCRYPTION_KEY</code>), never in the database.</li>
-        <li><strong style="color: var(--text-main);">In-Memory Decryption Only:</strong> Keys are decrypted only for the duration of the review job.</li>
-        <li><strong style="color: var(--text-main);">Last 4 Characters Visible:</strong> Only the last 4 characters are ever displayed.</li>
+    <section class="privacy-section">
+      <h2>2. Bring-Your-Own-Key (BYOK) Encryption</h2>
+      <ul class="privacy-list">
+        <li><strong>AES-256-GCM Encryption:</strong> Stored with unique 96-bit initialization vectors and authentication tags.</li>
+        <li><strong>Master Key:</strong> Kept in the server environment (<code>ENCRYPTION_KEY</code>), never in the database.</li>
+        <li><strong>In-Memory Decryption Only:</strong> Keys are decrypted only for the duration of the review job.</li>
+        <li><strong>Last 4 Characters Visible:</strong> Only the last 4 characters are ever displayed.</li>
       </ul>
     </section>
 
-    <section style="border-top: 1px solid var(--border); padding-top: 20px;">
-      <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 8px;">3. Custom Style Guides & RAG Embeddings</h2>
-      <ul style="margin-left: 20px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.7;">
-        <li><strong style="color: var(--text-main);">pgvector:</strong> Rule embeddings (768-d) stored in PostgreSQL with pgvector.</li>
-        <li><strong style="color: var(--text-main);">Multi-Tenant Isolation:</strong> Retrieval queries strictly filter by <code>installation_id</code>.</li>
+    <section class="privacy-section">
+      <h2>3. Custom Style Guides & RAG Embeddings</h2>
+      <ul class="privacy-list">
+        <li><strong>pgvector:</strong> Rule embeddings (768-d) stored in PostgreSQL with pgvector.</li>
+        <li><strong>Multi-Tenant Isolation:</strong> Retrieval queries strictly filter by <code>installation_id</code>.</li>
       </ul>
     </section>
 
-    <section style="border-top: 1px solid var(--border); padding-top: 20px;">
-      <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 8px;">4. Complete Data Deletion on Uninstall</h2>
-      <ul style="margin-left: 20px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.7;">
+    <section class="privacy-section">
+      <h2>4. Complete Data Deletion on Uninstall</h2>
+      <ul class="privacy-list">
         <li>Automated <code>installation.deleted</code> webhook immediately deletes the tenant record.</li>
         <li>Cascading database foreign keys permanently wipe encrypted keys, style rules, embeddings, reviews, and comments.</li>
       </ul>
     </section>
 
-    <section style="border-top: 1px solid var(--border); padding-top: 20px;">
-      <h2 style="font-size: 1rem; font-weight: 600; margin-bottom: 8px;">5. Authorization & Sessions</h2>
-      <ul style="margin-left: 20px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.7;">
+    <section class="privacy-section">
+      <h2>5. Authorization & Sessions</h2>
+      <ul class="privacy-list">
         <li>GitHub OAuth with httpOnly and secure session cookies.</li>
         <li>CSRF validation on all state-changing endpoints.</li>
       </ul>
     </section>
   </div>
-</div>
+</main>
 
 <%- include('partials/footer') %>

@@ -1,13 +1,14 @@
 <%- include('partials/header') %>
 
-<div class="container" style="padding-bottom: 40px;">
+<main class="container page-content">
   <div class="page-header">
-    <div>
+    <div class="page-header-text">
       <h1>Code Review Analytics</h1>
       <p class="subtitle">Review metrics, style violations, and resolution rates.</p>
     </div>
     <% if (installations && installations.length > 0) { %>
       <div class="installation-selector">
+        <label for="dashboard-inst-select" class="sr-only">Account:</label>
         <select id="dashboard-inst-select" onchange="window.location.href='/dashboard' + (this.value ? '?installation_id=' + this.value : '')">
           <option value="" <%= !selectedInstallationId ? 'selected' : '' %>>All Accounts</option>
           <% installations.forEach(function(inst) { %>
@@ -246,7 +247,7 @@
       </div>
     </div>
   <% } %>
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
